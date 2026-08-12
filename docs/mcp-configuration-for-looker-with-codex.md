@@ -84,6 +84,54 @@ This is the **native** install: no binary, no download, no local process to baby
 
 [Looker-managed MCP server | Google Cloud Documentation](https://docs.cloud.google.com/looker/docs/mcp)
 
+#### Same Server, Other Side of the Wire
+
+It is worth being precise about what actually changed, because the answer is funnier than you would expect. Ask the endpoint to introduce itself:
+
+```shell
+curl -s -X POST "$LOOKER_MCP_URL" \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{
+        "protocolVersion":"2025-06-18","capabilities":{},
+        "clientInfo":{"name":"probe","version":"0"}}}'
+```
+
+```json
+{"jsonrpc":"2.0","id":1,"result":{
+  "protocolVersion":"2025-06-18",
+  "capabilities":{"tools":{"listChanged":false},"prompts":{"listChanged":false}},
+  "serverInfo":{"name":"Toolbox","version":"1.4.0+container.release.linux.amd64.d67cfbe"}}}
+```
+
+`"name":"Toolbox"`. It is the same software. Google moved it to the other end of the connection and took over running it. Migrating to the native server is not a bet on new technology — it is the server you were already running, minus the operational responsibility.
+
+| | MCP Toolbox (local binary) | Native (Looker-hosted) |
+|---|---|---|
+| Install | 292 MB download per machine, updated forever | A URL |
+| Transport | stdio subprocess | Streamable HTTP |
+| Version | You pin it — currently v1.8.0 | Google pins it — currently 1.4.0 |
+| Tools | 46, from `--prebuilt looker,looker-dev` | 40, from the admin allowlist |
+| Governance | Client-side, per developer, advisory | Admin panel, instance-wide, enforced |
+| Auth | API3 key in the subprocess environment | Bearer token, or OAuth 2.1 + PKCE |
+| Failure mode | "Why won't the server start" | "Why is the endpoint slow" |
+
+Two of those rows deserve more than a table cell.
+
+**Version is the real trade.** The hosted server reports 1.4.0 while the downloadable binary is on v1.8.0. You are trading *version control for maintenance* — you stop patching, and you also stop choosing. If you depend on something that landed in Toolbox after 1.4.0, the native server is not yet where you want to be.
+
+**Governance is the real win.** With a downloaded Toolbox, the tool set was whatever `--prebuilt` shipped, and any restriction had to be re-implemented in every client by every developer who installed it. Now a tool switched off in the admin panel does not exist as far as any client is concerned. That is the difference between a policy and a suggestion.
+
+The preview caveats that matter for planning:
+
+* Customer-hosted (on-premise) instances are **not supported**.
+* There are **no fine-grained scopes** — tool access is one global allowlist, not per-user or per-group.
+* **Dynamic Client Registration is unavailable**, so OAuth clients must be registered by an admin.
+* Tool-list changes take about **30 seconds** to reach clients, which then have to reconnect.
+* Server capacity is fixed, so timeouts are possible under load.
+
+One more thing quietly disappeared from every client config in this series: `startup_timeout_sec`. It existed because 292 MB had to boot and handshake before the client would call the server ready. An endpoint that is already running has nothing to wait for.
+
 #### Looker MCP Setup
 
 The native server is **admin-gated**. Before any client can connect, an admin has to switch it on:
@@ -1106,6 +1154,83 @@ The agent is the right thing to ask *which explore has revenue by cohort, and wh
 ```
 
 The two also meet at the credential. `./lk token` mints the bearer token the MCP server authenticates with, so the CLI is not a second path bolted on beside the MCP server — it is what gets the MCP server connected in the first place.
+
+#### Coming Back to OAuth
+
+Everything above ran on a bearer token minted from an API3 key. That is the right call for an evaluation and the wrong one for a team, for one reason: **attribution**. Every action lands in System Activity and Cloud Audit Logs against the API3 key's user, not the human who asked for it. An agent that builds a dashboard, rewrites LookML or deletes a project file looks exactly like the service account did it — because it did.
+
+OAuth fixes that. Here is what it actually costs to turn on.
+
+**The instance already advertises everything a client needs.** Both discovery documents are live and unauthenticated:
+
+```shell
+curl -s "$LOOKER_BASE_URL/.well-known/oauth-authorization-server"
+```
+
+```json
+{"issuer":"https://your-instance.looker.app",
+ "authorization_endpoint":"https://your-instance.looker.app/auth",
+ "token_endpoint":"https://your-instance.looker.app/api/token",
+ "response_types_supported":["code"],
+ "grant_types_supported":["authorization_code","refresh_token"],
+ "token_endpoint_auth_methods_supported":["client_secret_basic","none"],
+ "scopes_supported":["cors_api","api"],
+ "code_challenge_methods_supported":["S256"]}
+```
+
+Two fields carry the news. `"none"` in `token_endpoint_auth_methods_supported` alongside `S256` in `code_challenge_methods_supported` is the signature of a **public client using PKCE** — there is no client secret to store anywhere, which is a real simplification for a terminal tool. And `refresh_token` in `grant_types_supported` quietly kills the problem that dogs the bearer setup: the one-hour expiry stops being yours to manage, because the client refreshes.
+
+**Dynamic Client Registration is off.** This is the step that costs you an admin:
+
+```shell
+curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+  "$LOOKER_BASE_URL/oauth/register" \
+  -H 'Content-Type: application/json' \
+  -d '{"client_name":"probe","redirect_uris":["http://localhost:1/cb"]}'
+```
+
+```plaintext
+403
+```
+
+So every agent gets registered by hand. That is one call — and of course it is a CLI call, because there is no MCP tool for it:
+
+```shell
+cat > app.json <<'EOF'
+{
+  "display_name": "Codex",
+  "description": "Codex CLI MCP client",
+  "redirect_uri": "http://localhost:8180/callback",
+  "enabled": true,
+  "group_id": ""
+}
+EOF
+
+./lk api auth register_oauth_client_app codex-cli app.json
+```
+
+The details that bite:
+
+* **The `client_guid` you invent is the OAuth `client_id`** you hand the client. The built-in registrations follow a convention worth copying — `com.looker.cli`, `com.looker.powerbi`, `com.looker.geminienterprise`.
+* **`redirect_uri` is singular and matched exactly.** One URI per app, no wildcards. Looker treats a mismatch as a forgery and rejects the login outright.
+* **`group_id` is your access control.** Set it and only members of that group may use the app; leave it empty and any user on the instance may.
+* **`enabled: false` invalidates existing tokens.** That is the kill switch — you never have to delete a registration to stop an agent.
+* **Users consent per app.** `activate_app_user <client_guid> <user_id>` records that a user accepted the app's access to their Looker data; the browser flow normally handles it for you.
+* **Registration requires admin.** If `./lk api role all_roles` returns a 404 for your key, you lack the permission and this is someone else's job.
+
+**The client side is where it gets interesting.** Codex can do MCP OAuth — the flags are there:
+
+```shell
+codex mcp add looker-managed --url "$LOOKER_MCP_URL" \
+  --oauth-client-id codex-cli
+codex mcp login looker-managed
+```
+
+`codex mcp login` also takes `--scopes`, which matters more than it looks. The authorization server advertises `cors_api` and `api`, but the protected-resource document for the MCP endpoint advertises only `cors_api`. Which of those the endpoint will actually honour is worth testing before you tear out the bearer path.
+
+What Codex does **not** expose is any way to pin the OAuth callback port. Claude Code carries a `--callback-port` flag for precisely this reason: Looker demands one exact pre-registered `redirect_uri`, and a client that picks a random port on every run cannot satisfy it. On Codex 0.147.0 there is no such flag on `mcp add` or `mcp login`, so you are left observing which redirect the flow actually presents and registering that URI after the fact.
+
+The honest summary: OAuth on the native server is solved in the protocol and unsolved in the tooling. The instance is ready, the discovery documents are correct, PKCE needs no secret, and refresh tokens end the expiry annoyance. What stands between you and it is a disabled DCR endpoint, an admin's calendar, and one client-side flag that not every client has.
 
 #### Troubleshooting
 

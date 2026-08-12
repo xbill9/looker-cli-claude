@@ -328,6 +328,66 @@ and scales it.</p>
 <p><a
 href="https://docs.cloud.google.com/looker/docs/mcp">Looker-managed MCP
 server | Google Cloud Documentation</a></p>
+<h4 id="same-server-other-side-of-the-wire">Same Server, Other Side of
+the Wire</h4>
+<p>It is worth being precise about what actually changed, because the
+answer is funnier than you would expect. Ask the endpoint to introduce
+itself:</p>
+<pre class="shell"><code>curl -s -X POST &quot;$LOOKER_MCP_URL&quot; \
+  -H &#39;Content-Type: application/json&#39; \
+  -H &#39;Accept: application/json, text/event-stream&#39; \
+  -d &#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{
+        &quot;protocolVersion&quot;:&quot;2025-06-18&quot;,&quot;capabilities&quot;:{},
+        &quot;clientInfo&quot;:{&quot;name&quot;:&quot;probe&quot;,&quot;version&quot;:&quot;0&quot;}}}&#39;</code></pre>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;jsonrpc&quot;</span><span class="fu">:</span><span class="st">&quot;2.0&quot;</span><span class="fu">,</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span><span class="dv">1</span><span class="fu">,</span><span class="dt">&quot;result&quot;</span><span class="fu">:{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;protocolVersion&quot;</span><span class="fu">:</span><span class="st">&quot;2025-06-18&quot;</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;capabilities&quot;</span><span class="fu">:{</span><span class="dt">&quot;tools&quot;</span><span class="fu">:{</span><span class="dt">&quot;listChanged&quot;</span><span class="fu">:</span><span class="kw">false</span><span class="fu">},</span><span class="dt">&quot;prompts&quot;</span><span class="fu">:{</span><span class="dt">&quot;listChanged&quot;</span><span class="fu">:</span><span class="kw">false</span><span class="fu">}},</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;serverInfo&quot;</span><span class="fu">:{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span><span class="st">&quot;Toolbox&quot;</span><span class="fu">,</span><span class="dt">&quot;version&quot;</span><span class="fu">:</span><span class="st">&quot;1.4.0+container.release.linux.amd64.d67cfbe&quot;</span><span class="fu">}}}</span></span></code></pre></div>
+<p><code>"name":"Toolbox"</code>. It is the same software. Google moved
+it to the other end of the connection and took over running it.
+Migrating to the native server is not a bet on new technology — it is
+the server you were already running, minus the operational
+responsibility.</p>
+<p><strong>MCP Toolbox (local binary)</strong> - Install: 292 MB
+download per machine, updated forever - Transport: stdio subprocess -
+Version: you pin it — currently v1.8.0 - Tools: 46, from
+<code>--prebuilt looker,looker-dev</code> - Governance: client-side, per
+developer, advisory - Auth: API3 key in the subprocess environment -
+Failure mode: “why won’t the server start”</p>
+<p><strong>Native (Looker-hosted)</strong> - Install: a URL - Transport:
+streamable HTTP - Version: Google pins it — currently 1.4.0 - Tools: 40,
+from the admin allowlist - Governance: admin panel, instance-wide,
+enforced - Auth: bearer token, or OAuth 2.1 + PKCE - Failure mode: “why
+is the endpoint slow”</p>
+<p>Two of those lines deserve more than a bullet.</p>
+<p><strong>Version is the real trade.</strong> The hosted server reports
+1.4.0 while the downloadable binary is on v1.8.0. You are trading
+<em>version control for maintenance</em> — you stop patching, and you
+also stop choosing. If you depend on something that landed in Toolbox
+after 1.4.0, the native server is not yet where you want to be.</p>
+<p><strong>Governance is the real win.</strong> With a downloaded
+Toolbox, the tool set was whatever <code>--prebuilt</code> shipped, and
+any restriction had to be re-implemented in every client by every
+developer who installed it. Now a tool switched off in the admin panel
+does not exist as far as any client is concerned. That is the difference
+between a policy and a suggestion.</p>
+<p>The preview caveats that matter for planning:</p>
+<ul>
+<li>Customer-hosted (on-premise) instances are <strong>not
+supported</strong>.</li>
+<li>There are <strong>no fine-grained scopes</strong> — tool access is
+one global allowlist, not per-user or per-group.</li>
+<li><strong>Dynamic Client Registration is unavailable</strong>, so
+OAuth clients must be registered by an admin.</li>
+<li>Tool-list changes take about <strong>30 seconds</strong> to reach
+clients, which then have to reconnect.</li>
+<li>Server capacity is fixed, so timeouts are possible under load.</li>
+</ul>
+<p>One more thing quietly disappeared from every client config in this
+series: <code>startup_timeout_sec</code>. It existed because 292 MB had
+to boot and handshake before the client would call the server ready. An
+endpoint that is already running has nothing to wait for.</p>
 <h4 id="looker-mcp-setup">Looker MCP Setup</h4>
 <p>The native server is <strong>admin-gated</strong>. Before any client
 can connect, an admin has to switch it on:</p>
@@ -481,13 +541,13 @@ start Codex.</p>
 <h4 id="codex-mcp-configuration">Codex MCP Configuration</h4>
 <p>Codex reads MCP servers from TOML. With a hosted server there is no
 command to launch — only a URL to point at and a token to present:</p>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode toml"><code class="sourceCode toml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[mcp_servers.&quot;</span><span class="dt">looker-managed&quot;</span><span class="kw">]</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="dt">url</span> <span class="op">=</span> <span class="st">&quot;https://780eb09e-7dab-4076-9ec1-ecf9d8414630.looker.app/mcp&quot;</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">bearer_token_env_var</span> <span class="op">=</span> <span class="st">&quot;LOOKER_MCP_TOKEN&quot;</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="dt">enabled</span> <span class="op">=</span> <span class="cn">true</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="dt">tool_timeout_sec</span> <span class="op">=</span> <span class="dv">120</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="dt">default_tools_approval_mode</span> <span class="op">=</span> <span class="st">&quot;writes&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[mcp_servers.&quot;</span><span class="dt">looker-managed&quot;</span><span class="kw">]</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="dt">url</span> <span class="op">=</span> <span class="st">&quot;https://780eb09e-7dab-4076-9ec1-ecf9d8414630.looker.app/mcp&quot;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="dt">bearer_token_env_var</span> <span class="op">=</span> <span class="st">&quot;LOOKER_MCP_TOKEN&quot;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="dt">enabled</span> <span class="op">=</span> <span class="cn">true</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="dt">tool_timeout_sec</span> <span class="op">=</span> <span class="dv">120</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="dt">default_tools_approval_mode</span> <span class="op">=</span> <span class="st">&quot;writes&quot;</span></span></code></pre></div>
 <p>Or, without editing TOML by hand:</p>
 <pre class="shell"><code>codex mcp add looker-managed \
   --url &quot;$LOOKER_MCP_URL&quot; \
@@ -1325,6 +1385,106 @@ in the loop and no tokens burned:</p>
 the bearer token the MCP server authenticates with, so the CLI is not a
 second path bolted on beside the MCP server — it is what gets the MCP
 server connected in the first place.</p>
+<h4 id="coming-back-to-oauth">Coming Back to OAuth</h4>
+<p>Everything above ran on a bearer token minted from an API3 key. That
+is the right call for an evaluation and the wrong one for a team, for
+one reason: <strong>attribution</strong>. Every action lands in System
+Activity and Cloud Audit Logs against the API3 key’s user, not the human
+who asked for it. An agent that builds a dashboard, rewrites LookML or
+deletes a project file looks exactly like the service account did it —
+because it did.</p>
+<p>OAuth fixes that. Here is what it actually costs to turn on.</p>
+<p><strong>The instance already advertises everything a client
+needs.</strong> Both discovery documents are live and
+unauthenticated:</p>
+<pre class="shell"><code>curl -s &quot;$LOOKER_BASE_URL/.well-known/oauth-authorization-server&quot;</code></pre>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;issuer&quot;</span><span class="fu">:</span><span class="st">&quot;https://your-instance.looker.app&quot;</span><span class="fu">,</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;authorization_endpoint&quot;</span><span class="fu">:</span><span class="st">&quot;https://your-instance.looker.app/auth&quot;</span><span class="fu">,</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;token_endpoint&quot;</span><span class="fu">:</span><span class="st">&quot;https://your-instance.looker.app/api/token&quot;</span><span class="fu">,</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;response_types_supported&quot;</span><span class="fu">:</span><span class="ot">[</span><span class="st">&quot;code&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;grant_types_supported&quot;</span><span class="fu">:</span><span class="ot">[</span><span class="st">&quot;authorization_code&quot;</span><span class="ot">,</span><span class="st">&quot;refresh_token&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;token_endpoint_auth_methods_supported&quot;</span><span class="fu">:</span><span class="ot">[</span><span class="st">&quot;client_secret_basic&quot;</span><span class="ot">,</span><span class="st">&quot;none&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;scopes_supported&quot;</span><span class="fu">:</span><span class="ot">[</span><span class="st">&quot;cors_api&quot;</span><span class="ot">,</span><span class="st">&quot;api&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;code_challenge_methods_supported&quot;</span><span class="fu">:</span><span class="ot">[</span><span class="st">&quot;S256&quot;</span><span class="ot">]</span><span class="fu">}</span></span></code></pre></div>
+<p>Two fields carry the news. <code>"none"</code> in
+<code>token_endpoint_auth_methods_supported</code> alongside
+<code>S256</code> in <code>code_challenge_methods_supported</code> is
+the signature of a <strong>public client using PKCE</strong> — there is
+no client secret to store anywhere, which is a real simplification for a
+terminal tool. And <code>refresh_token</code> in
+<code>grant_types_supported</code> quietly kills the problem that dogs
+the bearer setup: the one-hour expiry stops being yours to manage,
+because the client refreshes.</p>
+<p><strong>Dynamic Client Registration is off.</strong> This is the step
+that costs you an admin:</p>
+<pre class="shell"><code>curl -s -o /dev/null -w &#39;%{http_code}\n&#39; -X POST \
+  &quot;$LOOKER_BASE_URL/oauth/register&quot; \
+  -H &#39;Content-Type: application/json&#39; \
+  -d &#39;{&quot;client_name&quot;:&quot;probe&quot;,&quot;redirect_uris&quot;:[&quot;http://localhost:1/cb&quot;]}&#39;</code></pre>
+<pre class="plaintext"><code>403</code></pre>
+<p>So every agent gets registered by hand. That is one call — and of
+course it is a CLI call, because there is no MCP tool for it:</p>
+<pre class="shell"><code>cat &gt; app.json &lt;&lt;&#39;EOF&#39;
+{
+  &quot;display_name&quot;: &quot;Codex&quot;,
+  &quot;description&quot;: &quot;Codex CLI MCP client&quot;,
+  &quot;redirect_uri&quot;: &quot;http://localhost:8180/callback&quot;,
+  &quot;enabled&quot;: true,
+  &quot;group_id&quot;: &quot;&quot;
+}
+EOF
+
+./lk api auth register_oauth_client_app codex-cli app.json</code></pre>
+<p>The details that bite:</p>
+<ul>
+<li><strong>The <code>client_guid</code> you invent is the OAuth
+<code>client_id</code></strong> you hand the client. The built-in
+registrations follow a convention worth copying —
+<code>com.looker.cli</code>, <code>com.looker.powerbi</code>,
+<code>com.looker.geminienterprise</code>.</li>
+<li><strong><code>redirect_uri</code> is singular and matched
+exactly.</strong> One URI per app, no wildcards. Looker treats a
+mismatch as a forgery and rejects the login outright.</li>
+<li><strong><code>group_id</code> is your access control.</strong> Set
+it and only members of that group may use the app; leave it empty and
+any user on the instance may.</li>
+<li><strong><code>enabled: false</code> invalidates existing
+tokens.</strong> That is the kill switch — you never have to delete a
+registration to stop an agent.</li>
+<li><strong>Users consent per app.</strong>
+<code>activate_app_user &lt;client_guid&gt; &lt;user_id&gt;</code>
+records that a user accepted the app’s access to their Looker data; the
+browser flow normally handles it for you.</li>
+<li><strong>Registration requires admin.</strong> If
+<code>./lk api role all_roles</code> returns a 404 for your key, you
+lack the permission and this is someone else’s job.</li>
+</ul>
+<p><strong>The client side is where it gets interesting.</strong> Codex
+can do MCP OAuth — the flags are there:</p>
+<pre class="shell"><code>codex mcp add looker-managed --url &quot;$LOOKER_MCP_URL&quot; \
+  --oauth-client-id codex-cli
+codex mcp login looker-managed</code></pre>
+<p><code>codex mcp login</code> also takes <code>--scopes</code>, which
+matters more than it looks. The authorization server advertises
+<code>cors_api</code> and <code>api</code>, but the protected-resource
+document for the MCP endpoint advertises only <code>cors_api</code>.
+Which of those the endpoint will actually honour is worth testing before
+you tear out the bearer path.</p>
+<p>What Codex does <strong>not</strong> expose is any way to pin the
+OAuth callback port. Claude Code carries a <code>--callback-port</code>
+flag for precisely this reason: Looker demands one exact pre-registered
+<code>redirect_uri</code>, and a client that picks a random port on
+every run cannot satisfy it. On Codex 0.147.0 there is no such flag on
+<code>mcp add</code> or <code>mcp login</code>, so you are left
+observing which redirect the flow actually presents and registering that
+URI after the fact.</p>
+<p>The honest summary: OAuth on the native server is solved in the
+protocol and unsolved in the tooling. The instance is ready, the
+discovery documents are correct, PKCE needs no secret, and refresh
+tokens end the expiry annoyance. What stands between you and it is a
+disabled DCR endpoint, an admin’s calendar, and one client-side flag
+that not every client has.</p>
 <h4 id="troubleshooting">Troubleshooting</h4>
 <p>A short list of the things that actually go wrong:</p>
 <p><strong><code>/mcp</code> shows no servers</strong> - Cause: Project
