@@ -189,7 +189,8 @@ Three short examples; [`docs/hybrid-workflows.md`](docs/hybrid-workflows.md) has
 ## Structure
 
 - [lk](lk): CLI wrapper — resolves `.env`, host/port, and session-token auth. **Start here for CLI work.**
-- [Makefile](Makefile): `make cli` downloads the checksum-verified Looker CLI into `./looker-cli`; `make login` / `make check` are shortcuts for `./lk`.
+- [Makefile](Makefile): `make cli` downloads the checksum-verified Looker CLI into `./looker-cli`; `make login` / `make check` are shortcuts for `./lk`; `make medium` derives an article's Medium variant.
+- [scripts/medium.py](scripts/medium.py): Rewrites a dev.to article for Medium — strips frontmatter, promotes the title to an H1, and converts tables to bullet lists, since Medium renders neither. Writes `<name>-medium.md` and the `.html` its importer consumes. Needs `pandoc`.
 - [init.sh](init.sh) / [set_env.sh](set_env.sh): Currently **identical** setup scripts. Each resolves credentials (env var → cached file in `$HOME` → prompt), writes `.env`, derives `LOOKER_MCP_URL`, and exports the variables. Warns if `gcloud` is not authenticated; it does not log you in.
 - [.mcp.json](.mcp.json): Declares the `looker-managed` MCP server. Variable references only — **no secrets** — so it is safe to commit.
 - [.claude/settings.local.json](.claude/settings.local.json): Enables the MCP server for this project. There is no tool allowlist, so Looker tool calls still prompt.

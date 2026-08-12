@@ -182,18 +182,18 @@ The `view` key is the one spelling trap — the CLI calls the explore `view`, wh
 **Why bother with the second interface at all?** Because the two differ in what happens to the answer, not in what they can reach. Same instance, same API3 key, same REST API underneath.
 
 **Native MCP (`looker-managed`)**
-- Coverage: 40 tools — query, content, LookML dev, health
-- Results land in the model's context
-- Every row consumes context
-- Good at: discovery, judgement, structured content creation
-- Bad at: bulk output, anything admin-shaped
+- Coverage: 40 tools: query, content, LookML dev, health
+- Results land: In the model's context
+- Cost: Every row consumes context
+- Good at: Discovery, judgement, structured content creation
+- Bad at: Bulk output, anything admin-shaped
 
 **CLI (`./lk`)**
-- Coverage: the whole API — git, users, roles, schedules, connections, deploys
-- Results land on disk
-- Free of context until you read the file
-- Good at: scale, files, determinism, repeatability
-- Bad at: deciding what to ask for
+- Coverage: The whole API — git, users, roles, schedules, connections, deploys
+- Results land: On disk
+- Cost: Free of context until you read the file
+- Good at: Scale, files, determinism, repeatability
+- Bad at: Deciding what to ask for
 
 **Discover and decide over MCP, execute and persist with the CLI.** Asking an agent which explore holds revenue by cohort is worth twenty minutes of clicking through the Explore UI. Routing 40,000 rows through its context is not. Once the shape is settled, the CSV job runs forever with no agent in the loop and no tokens burned.
 
@@ -204,20 +204,20 @@ The two also meet at the credential: `./lk headers` is what authenticates the MC
 **MCP Toolbox (local binary)**
 - Install: 292 MB download per machine, updated forever
 - Transport: stdio subprocess
-- Version: you pin it — currently v1.8.0
+- Version: You pin it — currently v1.8.0
 - Tools: 46, from `--prebuilt looker,looker-dev`
-- Governance: client-side, per developer, advisory
+- Governance: Client-side, per developer, advisory
 - Auth: API3 key in the subprocess environment
-- Failure mode: "why won't the server start"
+- Failure mode: "Why won't the server start"
 
 **Native (Looker-hosted)**
-- Install: a URL
-- Transport: streamable HTTP
+- Install: A URL
+- Transport: Streamable HTTP
 - Version: Google pins it — currently 1.4.0
 - Tools: 40, from the admin allowlist
-- Governance: admin panel, instance-wide, enforced
-- Auth: bearer token, or OAuth 2.1 + PKCE
-- Failure mode: "why is the endpoint slow"
+- Governance: Admin panel, instance-wide, enforced
+- Auth: Bearer token, or OAuth 2.1 + PKCE
+- Failure mode: "Why is the endpoint slow"
 
 Two rows deserve more than a table cell.
 

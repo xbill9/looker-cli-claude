@@ -18,8 +18,12 @@ LOOKER_CLI_VERSION  ?=
 LOOKER_CLI_FALLBACK := v0.4.8
 LOOKER_CLI_BIN      := $(ROOT_DIR)/looker-cli
 
+# Article source for `make medium`. Override to convert a different one:
+#   make medium ARTICLE=docs/other-article.md
+ARTICLE ?= docs/looker-native-mcp-with-claude-code.md
+
 .DEFAULT_GOAL := help
-.PHONY: help cli login logout check
+.PHONY: help cli login logout check medium
 
 help:
 	@echo "Targets:"
@@ -28,6 +32,8 @@ help:
 	@echo "  login   Get a fresh Looker session token (./lk login)"
 	@echo "  logout  Invalidate the stored session token (./lk logout)"
 	@echo "  check   Smoke-test the connection (./lk user me)"
+	@echo "  medium  Derive the Medium variant of an article (.md + .html)"
+	@echo "          Defaults to $(ARTICLE); override with ARTICLE=..."
 	@echo
 	@echo "Credentials come from 'source set_env.sh'. The MCP server is hosted by"
 	@echo "the Looker instance itself - there is no local server binary."
@@ -43,6 +49,11 @@ logout:
 
 check:
 	@$(ROOT_DIR)/lk user me
+
+# Strip dev.to frontmatter, rewrite tables as lists (Medium renders neither),
+# and render the HTML that Medium's importer consumes. Requires pandoc.
+medium:
+	@python3 $(ROOT_DIR)/scripts/medium.py "$(ARTICLE)"
 
 # Download (or re-download) the Looker CLI for this host's OS/arch, verifying
 # the published SHA-256 checksum before installing.

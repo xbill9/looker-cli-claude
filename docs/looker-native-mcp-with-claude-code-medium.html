@@ -418,14 +418,14 @@ MCP exactly.</p>
 the two differ in what happens to the answer, not in what they can
 reach. Same instance, same API3 key, same REST API underneath.</p>
 <p><strong>Native MCP (<code>looker-managed</code>)</strong> - Coverage:
-40 tools — query, content, LookML dev, health - Results land in the
-model’s context - Every row consumes context - Good at: discovery,
-judgement, structured content creation - Bad at: bulk output, anything
+40 tools: query, content, LookML dev, health - Results land: In the
+model’s context - Cost: Every row consumes context - Good at: Discovery,
+judgement, structured content creation - Bad at: Bulk output, anything
 admin-shaped</p>
-<p><strong>CLI (<code>./lk</code>)</strong> - Coverage: the whole API —
-git, users, roles, schedules, connections, deploys - Results land on
-disk - Free of context until you read the file - Good at: scale, files,
-determinism, repeatability - Bad at: deciding what to ask for</p>
+<p><strong>CLI (<code>./lk</code>)</strong> - Coverage: The whole API —
+git, users, roles, schedules, connections, deploys - Results land: On
+disk - Cost: Free of context until you read the file - Good at: Scale,
+files, determinism, repeatability - Bad at: Deciding what to ask for</p>
 <p><strong>Discover and decide over MCP, execute and persist with the
 CLI.</strong> Asking an agent which explore holds revenue by cohort is
 worth twenty minutes of clicking through the Explore UI. Routing 40,000
@@ -437,14 +437,14 @@ second path bolted on beside MCP — it is what gets MCP connected.</p>
 <h4 id="native-vs-mcp-toolbox">Native vs MCP Toolbox</h4>
 <p><strong>MCP Toolbox (local binary)</strong> - Install: 292 MB
 download per machine, updated forever - Transport: stdio subprocess -
-Version: you pin it — currently v1.8.0 - Tools: 46, from
-<code>--prebuilt looker,looker-dev</code> - Governance: client-side, per
+Version: You pin it — currently v1.8.0 - Tools: 46, from
+<code>--prebuilt looker,looker-dev</code> - Governance: Client-side, per
 developer, advisory - Auth: API3 key in the subprocess environment -
-Failure mode: “why won’t the server start”</p>
-<p><strong>Native (Looker-hosted)</strong> - Install: a URL - Transport:
-streamable HTTP - Version: Google pins it — currently 1.4.0 - Tools: 40,
-from the admin allowlist - Governance: admin panel, instance-wide,
-enforced - Auth: bearer token, or OAuth 2.1 + PKCE - Failure mode: “why
+Failure mode: “Why won’t the server start”</p>
+<p><strong>Native (Looker-hosted)</strong> - Install: A URL - Transport:
+Streamable HTTP - Version: Google pins it — currently 1.4.0 - Tools: 40,
+from the admin allowlist - Governance: Admin panel, instance-wide,
+enforced - Auth: Bearer token, or OAuth 2.1 + PKCE - Failure mode: “Why
 is the endpoint slow”</p>
 <p>Two rows deserve more than a table cell.</p>
 <p><strong>Version is the real trade.</strong> The hosted server reports
