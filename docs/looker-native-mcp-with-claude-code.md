@@ -10,7 +10,9 @@ cover_image: https://raw.githubusercontent.com/xbill9/looker-cli-claude/main/doc
 
 <!--
 Cover art: docs/images/cover-native-mcp.jpg — generated with NB2Lite
-(gemini-3.1-flash-lite-image, Interactions API, 16:9, thinking_level=high).
+(gemini-3.1-flash-lite-image, Interactions API, 16:9, thinking_level=high),
+then one stateful edit to replace invented commands in the terminal with real
+./lk ones. First pass kept at docs/images/cover-native-mcp-v1.jpg.
 The raw.githubusercontent URL above resolves from the public repo, so it works
 as both the dev.to cover and the inline image in the Medium variant.
 -->
