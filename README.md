@@ -208,3 +208,9 @@ Three short examples; [`docs/hybrid-workflows.md`](docs/hybrid-workflows.md) has
 - `make cli` verifies the Looker CLI download against the release's published SHA-256 checksums and warns loudly if verification is skipped. Pin with `LOOKER_CLI_VERSION`.
 - Every MCP tool call is attributed to the API3 key's user and logged in Looker System Activity and Cloud Audit Logs. Per-user attribution requires OAuth.
 - Set `LOOKER_VERIFY_SSL=false` only for instances with self-signed certificates; it defaults to `true` and is honoured by the CLI wrapper.
+
+## License
+
+[MIT](LICENSE), except for the vendored skills under `.agents/skills/`, which come
+from [google/skills](https://github.com/google/skills) and remain under their
+upstream Apache-2.0 license.
