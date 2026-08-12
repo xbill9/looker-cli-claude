@@ -5,10 +5,19 @@ series: Looker
 date: 2026-08-12 00:00:00 UTC
 tags: mcp,looker,claudecode,cli
 canonical_url:
-cover_image:
+cover_image: https://raw.githubusercontent.com/xbill9/looker-cli-claude/main/docs/images/cover-native-mcp.jpg
 ---
 
+<!--
+Cover art: docs/images/cover-native-mcp.jpg — generated with NB2Lite
+(gemini-3.1-flash-lite-image, Interactions API, 16:9, thinking_level=high).
+The raw.githubusercontent URL above resolves from the public repo, so it works
+as both the dev.to cover and the inline image in the Medium variant.
+-->
+
 # Looker's Native MCP Server with Claude Code
+
+![Looker + MCP — The Native Server with Claude Code](https://raw.githubusercontent.com/xbill9/looker-cli-claude/main/docs/images/cover-native-mcp.jpg)
 
 Looker hosts its own MCP server now. This walks through connecting Claude Code to it, pairing it with the Looker CLI, and being clear-eyed about where the tool set stops.
 

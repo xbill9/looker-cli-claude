@@ -58,6 +58,9 @@ def convert(text):
         title = m.group(1).strip() if m else None
         text = text.lstrip("\n")
 
+    # Editorial notes are for the repo, not the reader.
+    text = re.sub(r"<!--.*?-->\n*", "", text, flags=re.S)
+
     out, pending, in_fence, count = [], [], False, 0
     for line in text.splitlines():
         if line.startswith("```"):
