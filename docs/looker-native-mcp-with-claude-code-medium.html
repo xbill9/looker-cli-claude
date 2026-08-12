@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Looker's Native MCP Server with Claude Code</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Looker's Native MCP Server with Claude Code</h1>
+</header>
+<h1 id="lookers-native-mcp-server-with-claude-code">Looker’s Native MCP
+Server with Claude Code</h1>
+<p>Looker hosts its own MCP server now. This walks through connecting
+Claude Code to it, pairing it with the Looker CLI, and being clear-eyed
+about where the tool set stops.</p>
+<h4 id="the-binary-you-no-longer-need">The binary you no longer
+need</h4>
+<p>Until recently, connecting an agent to Looker meant running MCP
+Toolbox as a local binary. You downloaded 292 MB onto your laptop,
+taught it your API credentials, launched it as a stdio subprocess, and
+kept it updated forever. Every developer needed their own copy, and the
+server ran on your side of the wire.</p>
+<p>Looker closed that gap. Every Looker (Google Cloud core) and Looker
+(original) instance now exposes an MCP endpoint on its own base URL:</p>
+<pre class="plaintext"><code>https://780eb09e-7dab-4076-9ec1-ecf9d8414630.looker.app/mcp</code></pre>
+<p>That is the entire install. Ask the endpoint who it is and the joke
+lands:</p>
+<pre class="shell"><code>curl -s -X POST &quot;$LOOKER_MCP_URL&quot; \
+  -H &#39;Content-Type: application/json&#39; \
+  -H &#39;Accept: application/json, text/event-stream&#39; \
+  -d &#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{
+        &quot;protocolVersion&quot;:&quot;2025-06-18&quot;,&quot;capabilities&quot;:{},
+        &quot;clientInfo&quot;:{&quot;name&quot;:&quot;probe&quot;,&quot;version&quot;:&quot;0&quot;}}}&#39;</code></pre>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;jsonrpc&quot;</span><span class="fu">:</span><span class="st">&quot;2.0&quot;</span><span class="fu">,</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span><span class="dv">1</span><span class="fu">,</span><span class="dt">&quot;result&quot;</span><span class="fu">:{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;protocolVersion&quot;</span><span class="fu">:</span><span class="st">&quot;2025-06-18&quot;</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;capabilities&quot;</span><span class="fu">:{</span><span class="dt">&quot;tools&quot;</span><span class="fu">:{</span><span class="dt">&quot;listChanged&quot;</span><span class="fu">:</span><span class="kw">false</span><span class="fu">},</span><span class="dt">&quot;prompts&quot;</span><span class="fu">:{</span><span class="dt">&quot;listChanged&quot;</span><span class="fu">:</span><span class="kw">false</span><span class="fu">}},</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;serverInfo&quot;</span><span class="fu">:{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span><span class="st">&quot;Toolbox&quot;</span><span class="fu">,</span><span class="dt">&quot;version&quot;</span><span class="fu">:</span><span class="st">&quot;1.4.0+container.release.linux.amd64.d67cfbe&quot;</span><span class="fu">}}}</span></span></code></pre></div>
+<p><code>"name":"Toolbox"</code>. It is the same software. Google moved
+it to the other end of the connection and took over running it.
+Migrating is not a bet on new technology — it is the server you were
+already running, minus the operational burden.</p>
+<h4 id="before-you-start">Before you start</h4>
+<p>Three things, and only the first needs someone else.</p>
+<p><strong>An admin has to switch the server on.</strong> It lives at
+<strong>Admin → Platform → Model Context Protocol</strong>. That page
+also holds the allowlist of which tools agents may call. A tool switched
+off there does not exist as far as any client is concerned.</p>
+<p><strong>You need API3 credentials</strong> — Base URL, Client ID,
+Client Secret. Looker admin panel, <em>Users → (your user) → Edit
+Keys</em>.</p>
+<p><strong>Note the preview limits</strong> before you plan around them.
+Customer-hosted instances are not supported. There are no fine-grained
+scopes — tool access is one global allowlist, not per-user or per-group.
+Tool-list changes take about 30 seconds to reach clients, which then
+have to reconnect.</p>
+<h4 id="setup-start-to-finish">Setup, start to finish</h4>
+<p><strong>1. Resolve credentials.</strong> The setup script prompts for
+anything it cannot find, writes <code>.env</code> at mode 600, and
+derives <code>LOOKER_MCP_URL</code> from your base URL:</p>
+<pre class="shell"><code>source set_env.sh</code></pre>
+<p>Source it, do not execute it. The reason matters and catches everyone
+once — see step 4.</p>
+<p><strong>2. Install the Looker CLI.</strong> Checksum-verified into
+the project root:</p>
+<pre class="shell"><code>make cli</code></pre>
+<pre class="plaintext"><code>looker-cli 0.4.8</code></pre>
+<p><strong>3. Smoke-test the credentials</strong> before involving an
+agent. If this fails, nothing downstream will work:</p>
+<pre class="shell"><code>./lk user me</code></pre>
+<pre class="plaintext"><code>+----+--------------+-------------+----------+
+| ID | DISPLAY NAME | IS DISABLED | ROLE IDS |
++----+--------------+-------------+----------+
+| 3  | xbill work   | false       | 8        |
+|    |              |             | 4        |
+|    |              |             | 149      |
++----+--------------+-------------+----------+</code></pre>
+<p><strong>4. Register the server with Claude Code.</strong> The whole
+configuration is four lines, and it holds no secrets:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;mcpServers&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;looker-managed&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;http&quot;</span><span class="fu">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;url&quot;</span><span class="fu">:</span> <span class="st">&quot;${LOOKER_MCP_URL}&quot;</span><span class="fu">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;headersHelper&quot;</span><span class="fu">:</span> <span class="st">&quot;${CLAUDE_PROJECT_DIR:-.}/lk headers&quot;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Compare that with what it replaced: a <code>bash -c</code> wrapper
+that sourced <code>.env</code>, checked three variables, and exec’d a
+292 MB binary with <code>--stdio --prebuilt looker,looker-dev</code>.
+Also gone is <code>startup_timeout_sec</code> — it existed because the
+binary had to boot and handshake before the client would call it ready.
+An endpoint that is already running has nothing to wait for.</p>
+<p>Two fields are doing real work here.</p>
+<p><code>headersHelper</code> names a <em>command</em>, not a static
+value. Claude Code runs it on every connection, and again automatically
+after a <code>401</code> or <code>403</code>, retrying the call once
+with fresh headers. Looker access tokens live one hour; this makes
+expiry heal itself. A stale token becomes one 401 you never see.</p>
+<p><code>${LOOKER_MCP_URL}</code> is expanded <strong>by Claude Code
+itself</strong>, not by a shell. A stdio server could source
+<code>.env</code> inside its own wrapper; a remote server has no
+wrapper. The variable must exist in the environment of the process you
+launch <code>claude</code> from — which is exactly why step 1 says
+<em>source</em>, not execute. If your tools are missing, check this
+first.</p>
+<p><strong>5. Verify.</strong> Start Claude Code and run
+<code>/mcp</code>. You should see <code>looker-managed</code> connected
+with 40 tools. The endpoint will confirm the count itself, without
+credentials:</p>
+<pre class="shell"><code>curl -s -X POST &quot;$LOOKER_MCP_URL&quot; \
+  -H &#39;Content-Type: application/json&#39; \
+  -H &#39;Accept: application/json, text/event-stream&#39; \
+  -d &#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:2,&quot;method&quot;:&quot;tools/list&quot;}&#39; | jq &#39;.result.tools | length&#39;</code></pre>
+<pre class="plaintext"><code>40</code></pre>
+<p>Metadata is open — <code>initialize</code> and
+<code>tools/list</code> answer unauthenticated, which is what lets a
+client discover the server before signing in. <code>tools/call</code>
+refuses without a token. Nothing touches data anonymously.</p>
+<p>One note on what this authentication actually is.
+<code>./lk headers</code> exchanges your API3 key for a short-lived
+Looker access token. It works, and it is the right call for evaluation,
+but every action is attributed to the API3 key’s user rather than the
+human who asked. For a shared instance, register an OAuth client instead
+— the instance advertises the endpoints at
+<code>/.well-known/oauth-authorization-server</code> and uses PKCE, so
+there is no client secret to store.</p>
+<h4 id="an-example-from-question-to-file">An example: from question to
+file</h4>
+<p>Here is the pattern the whole setup exists to support. Start with a
+question, not a query.</p>
+<blockquote>
+<p>Which product categories drive the most revenue?</p>
+</blockquote>
+<p>Claude walks the semantic model. <code>get_models</code> returns the
+instance inventory:</p>
+<pre class="plaintext"><code>basic_ecomm, intermediate_ecomm, advanced_ecomm       sample_thelook_ecommerce
+london_bicycles                                       london_bicycles
+gcp_billing_block                                     marketplace_gcp-billing
+bq_agent_analytics                                    agent_events</code></pre>
+<p><code>get_explores</code> on <code>advanced_ecomm</code> narrows it
+to two, and <code>get_measures</code> returns the aggregates that
+actually exist — <code>order_items.total_sale_price</code>,
+<code>order_items.count</code>,
+<code>order_items.average_sale_price</code>. No guessing at column
+names, and no SQL. The agent is reading the same governed definitions
+your dashboards use.</p>
+<p>Then <code>query</code> runs it:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;products.category&quot;</span><span class="fu">:</span><span class="st">&quot;Outerwear &amp; Coats&quot;</span><span class="fu">,</span><span class="dt">&quot;order_items.total_sale_price&quot;</span><span class="fu">:</span><span class="fl">971454.48</span><span class="fu">,</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;order_items.count&quot;</span><span class="fu">:</span><span class="dv">6711</span><span class="fu">,</span><span class="dt">&quot;order_items.average_sale_price&quot;</span><span class="fu">:</span><span class="fl">144.76</span><span class="fu">}</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;products.category&quot;</span><span class="fu">:</span><span class="st">&quot;Jeans&quot;</span><span class="fu">,</span><span class="dt">&quot;order_items.total_sale_price&quot;</span><span class="fu">:</span><span class="fl">924765.39</span><span class="fu">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;order_items.count&quot;</span><span class="fu">:</span><span class="dv">9428</span><span class="fu">,</span><span class="dt">&quot;order_items.average_sale_price&quot;</span><span class="fu">:</span><span class="fl">98.09</span><span class="fu">}</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;products.category&quot;</span><span class="fu">:</span><span class="st">&quot;Sweaters&quot;</span><span class="fu">,</span><span class="dt">&quot;order_items.total_sale_price&quot;</span><span class="fu">:</span><span class="fl">630197.03</span><span class="fu">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;order_items.count&quot;</span><span class="fu">:</span><span class="dv">8476</span><span class="fu">,</span><span class="dt">&quot;order_items.average_sale_price&quot;</span><span class="fu">:</span><span class="fl">74.35</span><span class="fu">}</span></span></code></pre></div>
+<p>Outerwear leads on revenue with a third fewer items sold than Jeans,
+because it carries a 48% higher average price. That is the kind of read
+worth having an agent for: the rows are in its context, so it can reason
+about them.</p>
+<p><strong>Now hand it to the CLI.</strong> The query shape is settled,
+so freeze it. Same fields, same sorts, in a file the CLI
+understands:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;model&quot;</span><span class="fu">:</span> <span class="st">&quot;advanced_ecomm&quot;</span><span class="fu">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;view&quot;</span><span class="fu">:</span> <span class="st">&quot;advanced_example_ecommerce&quot;</span><span class="fu">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;fields&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;products.category&quot;</span><span class="ot">,</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;order_items.total_sale_price&quot;</span><span class="ot">,</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;order_items.count&quot;</span><span class="ot">,</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;order_items.average_sale_price&quot;</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sorts&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;order_items.total_sale_price desc&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;limit&quot;</span><span class="fu">:</span> <span class="st">&quot;6&quot;</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<pre class="shell"><code>./lk query runquery --file q.json --format csv --output category-revenue.csv</code></pre>
+<pre class="plaintext"><code>Products Category,Order Items Sales,Order Items # of Order Items,Order Items Average Price
+Outerwear &amp; Coats,971454.4791278839,6711,144.75554747845126
+Jeans,924765.3913908005,9428,98.08712254887557
+Sweaters,630197.0301675797,8476,74.35075863232427</code></pre>
+<p>Identical numbers, different destination. That is the entire argument
+for running both.</p>
+<p>The <code>view</code> key is the one spelling trap — the CLI calls
+the explore <code>view</code>, while <code>model</code>,
+<code>fields</code>, <code>filters</code> and <code>sorts</code> match
+MCP exactly.</p>
+<p><strong>Why bother with the second interface at all?</strong> Because
+the two differ in what happens to the answer, not in what they can
+reach. Same instance, same API3 key, same REST API underneath.</p>
+<p><strong>Native MCP (<code>looker-managed</code>)</strong> - Coverage:
+40 tools — query, content, LookML dev, health - Results land in the
+model’s context - Every row consumes context - Good at: discovery,
+judgement, structured content creation - Bad at: bulk output, anything
+admin-shaped</p>
+<p><strong>CLI (<code>./lk</code>)</strong> - Coverage: the whole API —
+git, users, roles, schedules, connections, deploys - Results land on
+disk - Free of context until you read the file - Good at: scale, files,
+determinism, repeatability - Bad at: deciding what to ask for</p>
+<p><strong>Discover and decide over MCP, execute and persist with the
+CLI.</strong> Asking an agent which explore holds revenue by cohort is
+worth twenty minutes of clicking through the Explore UI. Routing 40,000
+rows through its context is not. Once the shape is settled, the CSV job
+runs forever with no agent in the loop and no tokens burned.</p>
+<p>The two also meet at the credential: <code>./lk headers</code> is
+what authenticates the MCP server in the first place. The CLI is not a
+second path bolted on beside MCP — it is what gets MCP connected.</p>
+<h4 id="native-vs-mcp-toolbox">Native vs MCP Toolbox</h4>
+<p><strong>MCP Toolbox (local binary)</strong> - Install: 292 MB
+download per machine, updated forever - Transport: stdio subprocess -
+Version: you pin it — currently v1.8.0 - Tools: 46, from
+<code>--prebuilt looker,looker-dev</code> - Governance: client-side, per
+developer, advisory - Auth: API3 key in the subprocess environment -
+Failure mode: “why won’t the server start”</p>
+<p><strong>Native (Looker-hosted)</strong> - Install: a URL - Transport:
+streamable HTTP - Version: Google pins it — currently 1.4.0 - Tools: 40,
+from the admin allowlist - Governance: admin panel, instance-wide,
+enforced - Auth: bearer token, or OAuth 2.1 + PKCE - Failure mode: “why
+is the endpoint slow”</p>
+<p>Two rows deserve more than a table cell.</p>
+<p><strong>Version is the real trade.</strong> The hosted server reports
+1.4.0 while the downloadable binary is on v1.8.0. You stop patching, and
+you also stop choosing. If you depend on something that landed in
+Toolbox after 1.4.0, stay where you are for now.</p>
+<p><strong>Governance is the real win.</strong> With a downloaded
+Toolbox, the tool set was whatever <code>--prebuilt</code> shipped, and
+any restriction had to be re-implemented in every client by every
+developer who installed it. Now a tool switched off in the admin panel
+does not exist for anyone. That is the difference between a policy and a
+suggestion.</p>
+<p>Migrating is mostly deletion: add the new server, move your git
+workflow to the CLI, then delete the binary, the download step, the
+launcher script and the <code>toolbox</code> line in
+<code>.gitignore</code>. In this repo that removed 292 MB, a checksum
+routine, a stdio wrapper, and an entire class of “why won’t the server
+start” support question.</p>
+<h4 id="what-mcp-cannot-do">What MCP cannot do</h4>
+<p>The gaps are not random. The server covers Looker as a <em>semantic
+model</em> and stops at the edge of Looker as an <em>administered
+system</em>.</p>
+<p><strong>Git, entirely.</strong> <code>list_git_branches</code>,
+<code>get_git_branch</code>, <code>create_git_branch</code>,
+<code>switch_git_branch</code> and <code>delete_git_branch</code> all
+shipped with the local binary. The managed server exposes none of them.
+File editing and <code>dev_mode</code> are present, so the agent can
+write LookML — it just cannot get itself onto a branch to write it
+safely. The CLI covers that half:</p>
+<pre class="shell"><code>./lk api project create_git_branch --project_id my_project --name my_branch
+./lk project checkout my_project my_branch</code></pre>
+<p><strong>Commit is missing from both, and that one is not an MCP
+limitation.</strong> The Looker API has no commit endpoint at all.
+Search the CLI’s entire surface and you get deploy verbs:</p>
+<pre class="shell"><code>./lk meta search commit</code></pre>
+<pre class="plaintext"><code>Found 7 matching commands:
+  looker-cli api project create_git_branch     - Checkout New Git Branch
+  looker-cli api project deploy_to_production  - Deploy To Production
+  looker-cli api project tag_ref               - Tag Ref
+  looker-cli api project update_git_branch     - Update Project Git Branch
+  ...</code></pre>
+<p>So the agent creates the branch, writes the files, validates them and
+runs the tests — then stops. Committing the workspace is an IDE
+operation. The loop that looks like it should close (branch → edit →
+validate → commit → deploy) closes at every step except the second to
+last, and that step needs a browser.</p>
+<p>Plan around it rather than fighting it. The agent does the branch,
+the edits, the validation and the tests; a human commits in the Looker
+IDE; the terminal deploys:</p>
+<pre class="shell"><code>./lk project deploy my_project</code></pre>
+<p><code>deploy_to_production</code> never had an MCP equivalent either,
+so the deploy was always a CLI call. The commit is the only step neither
+interface can reach.</p>
+<p><strong><code>get_field_value_suggestions</code>.</strong> Gone. To
+find valid filter values, query the field’s suggest explore directly —
+<code>get_dimensions</code> names it in the <code>suggest_explore</code>
+and <code>suggest_dimension</code> attributes of any suggestable
+field.</p>
+<p><strong>The entire administrative surface.</strong> Users, groups,
+roles, permissions, user attributes, schedules, alerts, connections,
+themes and sessions have no MCP tools and never did. Every one is a
+<code>./lk api</code> call.</p>
+<p>Two permission failures look like bugs and are not:
+<code>health_analyze</code> and <code>health_vacuum</code> need System
+Activity access and return <em>Access Denied</em> without it, and
+<code>plan ls</code> returns 404 without <code>see_schedules</code>.</p>
+<p>Everything else — discovery, querying, content creation, LookML
+files, validation, tests, health — is present and works.</p>
+<h4 id="summary">Summary</h4>
+<p>The native install is a smaller thing to own than what it replaced. A
+292 MB download, a stdio wrapper and a <code>--prebuilt</code> flag
+collapsed into a URL and a <code>headersHelper</code>. Google patches
+the server, the admin panel governs which tools exist, and System
+Activity logs what the agent did.</p>
+<p>What you give up is specific and covered: five git tools and
+<code>get_field_value_suggestions</code>, all of which the CLI handles.
+What you should fix before production is the auth shortcut — swap the
+API3 token helper for a registered OAuth client so actions are
+attributed to a person rather than a key.</p>
+<p>The durable lesson is the division of labor. The MCP server is for
+discovery and judgement; the CLI is for execution and persistence.
+Install only one and you will find the seam within a week — most likely
+on a Tuesday afternoon, halfway through a LookML change, at the commit
+step.</p>
+<h4 id="references">References</h4>
+<ul>
+<li><a
+href="https://docs.cloud.google.com/looker/docs/mcp">Looker-managed MCP
+server | Google Cloud Documentation</a></li>
+<li><a
+href="https://docs.cloud.google.com/looker/docs/admin-panel-platform-mcp">Admin
+settings — Model Context Protocol (MCP) | Google Cloud
+Documentation</a></li>
+<li><a href="https://github.com/looker-open-source/looker-cli">Looker
+CLI | GitHub</a></li>
+<li><a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox
+for Databases | GitHub</a></li>
+</ul>
+</body>
+</html>
