@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "looker-managed": {
+      "type": "http",
+      "url": "${LOOKER_MCP_URL}",
+      "headersHelper": "${CLAUDE_PROJECT_DIR:-.}/lk headers"
+    }
+  }
+}

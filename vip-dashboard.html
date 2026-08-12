@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIP Customer Intelligence</title>
+<style>
+  :root {
+    --plane:        #f9f9f7;
+    --surface:      #fcfcfb;
+    --text-primary: #0b0b0b;
+    --text-secondary:#52514e;
+    --muted:        #898781;
+    --grid:         #e1e0d9;
+    --baseline:     #c3c2b7;
+    --border:       rgba(11,11,11,0.10);
+    --track:        rgba(11,11,11,0.05);
+    --s-blue:       #2a78d6;
+    --s-aqua:       #1baf7a;
+    --s-yellow:     #eda100;
+    --shadow:       0 1px 2px rgba(11,11,11,.06), 0 4px 16px rgba(11,11,11,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --plane:        #0d0d0d;
+      --surface:      #1a1a19;
+      --text-primary: #ffffff;
+      --text-secondary:#c3c2b7;
+      --muted:        #898781;
+      --grid:         #2c2c2a;
+      --baseline:     #383835;
+      --border:       rgba(255,255,255,0.10);
+      --track:        rgba(255,255,255,0.05);
+      --s-blue:       #3987e5;
+      --s-aqua:       #199e70;
+      --s-yellow:     #c98500;
+      --shadow:       0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --plane:#0d0d0d; --surface:#1a1a19; --text-primary:#fff; --text-secondary:#c3c2b7;
+    --muted:#898781; --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,.10);
+    --track:rgba(255,255,255,.05); --s-blue:#3987e5; --s-aqua:#199e70; --s-yellow:#c98500;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"] {
+    --plane:#f9f9f7; --surface:#fcfcfb; --text-primary:#0b0b0b; --text-secondary:#52514e;
+    --muted:#898781; --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,.10);
+    --track:rgba(11,11,11,.05); --s-blue:#2a78d6; --s-aqua:#1baf7a; --s-yellow:#eda100;
+    --shadow:0 1px 2px rgba(11,11,11,.06),0 4px 16px rgba(11,11,11,.05);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--plane);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 56px; }
+  header.page { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 6px; }
+  h1 { font-size: 26px; font-weight: 680; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--text-secondary); font-size: 14px; margin: 4px 0 24px; }
+  .src { color: var(--muted); font-size: 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 20px 22px 22px;
+  }
+  .card.wide { grid-column: 1 / -1; }
+  .card h2 { font-size: 15px; font-weight: 640; margin: 0 0 2px; letter-spacing: -0.005em; }
+  .card .cardsub { color: var(--muted); font-size: 12px; margin: 0 0 18px; }
+  .chart { display: flex; flex-direction: column; gap: 11px; }
+  .row { display: grid; grid-template-columns: 148px 1fr; align-items: center; gap: 12px; }
+  .row .lab { font-size: 12.5px; color: var(--text-secondary); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .barwrap { position: relative; display: flex; align-items: center; gap: 10px; }
+  .track { position: relative; flex: 1; height: 20px; background: var(--track); border-radius: 4px; overflow: hidden; }
+  .bar {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    border-radius: 0 4px 4px 0;
+    min-width: 3px;
+    transition: filter .12s ease;
+  }
+  .row:hover .bar { filter: brightness(1.08) saturate(1.05); }
+  .val { font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--text-primary); white-space: nowrap; min-width: 82px; }
+  .val .u { color: var(--muted); font-size: 11px; }
+  /* tooltip */
+  .row { position: relative; }
+  .tip {
+    position: absolute; left: 160px; bottom: calc(100% + 6px);
+    background: var(--text-primary); color: var(--surface);
+    padding: 7px 10px; border-radius: 8px; font-size: 11.5px; line-height: 1.5;
+    white-space: nowrap; opacity: 0; pointer-events: none; transform: translateY(3px);
+    transition: opacity .12s, transform .12s; z-index: 5; box-shadow: var(--shadow);
+    font-variant-numeric: tabular-nums;
+  }
+  .tip b { font-weight: 640; }
+  .row:hover .tip { opacity: 1; transform: translateY(0); }
+  .note {
+    margin-top: 18px; padding: 12px 14px; border-left: 3px solid var(--s-blue);
+    background: var(--track); border-radius: 6px; font-size: 12.5px; color: var(--text-secondary);
+  }
+  /* exec summary */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 0 0 22px; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 16px 18px 15px;
+  }
+  .kpi .klab { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .kpi .big { font-size: 28px; font-weight: 680; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .kpi .ctx { font-size: 12px; color: var(--text-secondary); margin-top: 7px; }
+  .kpi .ctx b { color: var(--text-primary); font-weight: 620; }
+  .bottomline {
+    grid-column: 1 / -1; background: var(--track); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 20px; margin-bottom: 22px;
+    font-size: 13.5px; line-height: 1.6; color: var(--text-secondary);
+  }
+  .bottomline b { color: var(--text-primary); font-weight: 640; }
+  .bottomline .eyebrow { display:block; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--s-blue); font-weight:640; margin-bottom:5px; }
+  @media (max-width: 780px) { .kpis { grid-template-columns: 1fr 1fr; } }
+  .toggle {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary);
+    border-radius: 8px; padding: 6px 12px; font-size: 12.5px; cursor: pointer; font-family: inherit;
+  }
+  .toggle:hover { color: var(--text-primary); }
+  @media (max-width: 780px) {
+    .grid { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 110px 1fr; }
+    .tip { left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <h1>💎 VIP Customer Intelligence</h1>
+    <button class="toggle" id="themeBtn">Toggle theme</button>
+  </header>
+  <p class="sub">Real-time insights into top-performing revenue segments &middot; Looker dashboard 14
+    &nbsp;·&nbsp; <span class="src">model <code>advanced_ecomm</code> · explore <code>advanced_example_ecommerce</code></span>
+  </p>
+
+  <div class="kpis">
+    <div class="kpi">
+      <p class="klab">Lifetime revenue</p>
+      <div class="big">$7.40M</div>
+      <p class="ctx">Across all purchasing users</p>
+    </div>
+    <div class="kpi">
+      <p class="klab">Top-1000 VIP revenue</p>
+      <div class="big">$731K</div>
+      <p class="ctx"><b>$149</b> avg basket · <b>~7×</b> the bottom tier</p>
+    </div>
+    <div class="kpi">
+      <p class="klab">Revenue concentration</p>
+      <div class="big">56%</div>
+      <p class="ctx">From the <b>1st quartile</b> of customers</p>
+    </div>
+    <div class="kpi">
+      <p class="klab">VIP geography</p>
+      <div class="big">72%</div>
+      <p class="ctx">Of VIP spend from <b>China, US, Brasil</b></p>
+    </div>
+  </div>
+
+  <div class="bottomline">
+    <span class="eyebrow">Bottom line</span>
+    Revenue is <b>highly concentrated</b>: the top quartile drives 56% of lifetime sales, and a 1,000-customer VIP core spends ~7× the average shopper. That core is <b>geographically narrow</b> (72% from three countries) and <b>premium-led</b> — Outerwear &amp; Coats alone accounts for $245K at a $370 average item. The strategic lever is <b>retention and expansion of the VIP core</b>, not broad acquisition.
+  </div>
+
+  <div class="grid">
+    <!-- Tile 1: full width -->
+    <div class="card wide">
+      <h2>VIP Tiers — Lifetime Revenue Rank Groups</h2>
+      <p class="cardsub">Total sales by lifetime revenue rank group · all purchasing users</p>
+      <div class="chart" id="c1"></div>
+      <div class="note">
+        <b>Steep concentration:</b> the 1st quartile drives ~55% of lifetime revenue. The
+        <b>Top&nbsp;1000</b> is a distinct elite flag <em>inside</em> the 1st 25% (its dollars are also
+        counted there — don't sum the bars) — 1,000 users at a $149 average basket, ~7× the bottom tier.
+      </div>
+    </div>
+
+    <!-- Tile 2 -->
+    <div class="card">
+      <h2>Top 1000 VIPs — Sales by Country</h2>
+      <p class="cardsub">Where the highest-value customers are concentrated</p>
+      <div class="chart" id="c2"></div>
+    </div>
+
+    <!-- Tile 3 -->
+    <div class="card">
+      <h2>Top 1000 VIPs — Sales by Product Category</h2>
+      <p class="cardsub">Which categories drive elite-customer spend</p>
+      <div class="chart" id="c3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+  const fmtK = n => n >= 1e6 ? '$' + (n/1e6).toFixed(2) + 'M' : '$' + (n/1e3).toFixed(0) + 'K';
+
+  const tiers = [
+    { label: '1st 25%',    sales: 4134223.62, users: 15569, items: 53458, avg: 77.34 },
+    { label: '2nd 25%',    sales: 1931678.39, users: 16554, items: 36005, avg: 53.65 },
+    { label: '3rd 25%',    sales: 947615.05,  users: 16557, items: 24026, avg: 39.44 },
+    { label: 'Top 1000',   sales: 731206.93,  users: 1000,  items: 4893,  avg: 149.44 },
+    { label: 'Bottom 25%', sales: 382605.35,  users: 16560, items: 17800, avg: 21.49 },
+  ];
+  const country = [
+    { label: 'China',          sales: 259128.70, users: 359, avg: 147.23 },
+    { label: 'United States',  sales: 163185.27, users: 224, avg: 147.41 },
+    { label: 'Brasil',         sales: 106612.57, users: 143, avg: 155.64 },
+    { label: 'South Korea',    sales: 37380.65,  users: 53,  avg: 129.34 },
+    { label: 'France',         sales: 37177.97,  users: 52,  avg: 149.31 },
+    { label: 'Spain',          sales: 35645.96,  users: 47,  avg: 163.51 },
+    { label: 'Germany',        sales: 32112.10,  users: 43,  avg: 158.19 },
+    { label: 'United Kingdom', sales: 28493.63,  users: 37,  avg: 178.09 },
+    { label: 'Australia',      sales: 12553.60,  users: 15,  avg: 149.45 },
+    { label: 'Belgium',        sales: 10463.99,  users: 16,  avg: 129.19 },
+    { label: 'Japan',          sales: 7770.56,   users: 10,  avg: 146.61 },
+    { label: 'Poland',         sales: 681.93,    users: 1,   avg: 170.48 },
+  ];
+  const category = [
+    { label: 'Outerwear & Coats',        sales: 245412.43, items: 664, avg: 369.60 },
+    { label: 'Suits & Sport Coats',      sales: 70837.85,  items: 278, avg: 254.81 },
+    { label: 'Jeans',                    sales: 58420.79,  items: 423, avg: 138.11 },
+    { label: 'Active',                   sales: 48295.21,  items: 220, avg: 219.52 },
+    { label: 'Sweaters',                 sales: 36618.22,  items: 325, avg: 112.67 },
+    { label: 'Dresses',                  sales: 35941.59,  items: 185, avg: 194.28 },
+    { label: 'Shorts',                   sales: 27586.74,  items: 272, avg: 101.42 },
+    { label: 'Blazers & Jackets',        sales: 25524.44,  items: 114, avg: 223.90 },
+    { label: 'Fashion Hoodies & Sweat.', sales: 24769.54,  items: 286, avg: 86.61 },
+    { label: 'Sleep & Lounge',           sales: 18458.72,  items: 252, avg: 73.25 },
+    { label: 'Swim',                     sales: 18384.66,  items: 279, avg: 65.89 },
+    { label: 'Pants',                    sales: 16153.86,  items: 210, avg: 76.92 },
+    { label: 'Accessories',              sales: 15742.63,  items: 247, avg: 63.74 },
+    { label: 'Plus',                     sales: 12982.37,  items: 89,  avg: 145.87 },
+    { label: 'Intimates',                sales: 12842.34,  items: 211, avg: 60.86 },
+  ];
+
+  function render(id, data, color) {
+    const max = Math.max(...data.map(d => d.sales));
+    const el = document.getElementById(id);
+    el.innerHTML = data.map(d => {
+      const w = (d.sales / max) * 100;
+      const detail = d.users !== undefined
+        ? `<b>${d.label}</b><br>Sales ${fmt(d.sales)} · ${d.users.toLocaleString()} users · avg ${fmt(d.avg)}`
+        : `<b>${d.label}</b><br>Sales ${fmt(d.sales)} · ${d.items.toLocaleString()} items · avg ${fmt(d.avg)}`;
+      return `
+        <div class="row">
+          <div class="lab" title="${d.label}">${d.label}</div>
+          <div class="barwrap">
+            <div class="track"><div class="bar" style="width:${w}%;background:${color}"></div></div>
+            <div class="val">${fmtK(d.sales)}</div>
+          </div>
+          <div class="tip">${detail}</div>
+        </div>`;
+    }).join('');
+  }
+
+  render('c1', tiers,    'var(--s-blue)');
+  render('c2', country,  'var(--s-aqua)');
+  render('c3', category, 'var(--s-yellow)');
+
+  // theme toggle
+  const btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light'
+      : cur === 'light' ? 'dark'
+      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', next);
+  });
+</script>
+</body>
+</html>

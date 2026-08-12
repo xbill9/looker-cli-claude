@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+#
+# lk — run ./looker-cli against the instance configured in .env.
+#
+# The Looker CLI does not read .env (or any LOOKER_* env var) on its own: every
+# invocation needs --host/--port plus credentials. This wrapper resolves those
+# once, then authenticates with a short-lived session token so the client
+# secret is not repeated in the process list on every command.
+#
+#   ./lk model ls
+#   ./lk folder tree 1
+#   ./lk query runquery --file q.json --format csv
+#   ./lk login          # force a fresh session token
+#   ./lk logout         # invalidate the stored token
+#   ./lk headers        # {"Authorization": "Bearer ..."} for an MCP headersHelper
+#
+# Anything else is passed through to looker-cli verbatim, so `./lk <cmd> --help`
+# works for the full command tree.
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CLI="${LOOKER_CLI:-$ROOT_DIR/looker-cli}"
+AUTH_FILE="$HOME/.looker_auth"
+
+# Re-authenticate when the stored token is older than this. Looker access
+# tokens live for an hour; 45 minutes leaves room for a long-running command.
+TOKEN_MAX_AGE_MINUTES=45
+
+if [ ! -x "$CLI" ]; then
+    echo "Error: looker-cli not found at $CLI. Run: make cli" >&2
+    exit 1
+fi
+
+# Credentials come from .env (written by set_env.sh) when it exists, falling
+# back to exported LOOKER_* variables — the same order .mcp.json uses.
+if [ -f "$ROOT_DIR/.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    . "$ROOT_DIR/.env"
+    set +a
+fi
+
+if [ -z "${LOOKER_BASE_URL:-}" ] || [ -z "${LOOKER_CLIENT_ID:-}" ] || [ -z "${LOOKER_CLIENT_SECRET:-}" ]; then
+    echo "Error: no Looker credentials found. Run: source set_env.sh" >&2
+    exit 1
+fi
+
+# The CLI wants a bare hostname and an explicit port, not a URL. Hosted Looker
+# instances serve the API on 443; the legacy default of 19999 only applies to
+# self-hosted deployments, so honor an explicit port in the URL when present.
+HOST="${LOOKER_BASE_URL#http://}"
+HOST="${HOST#https://}"
+HOST="${HOST%%/*}"
+PORT=443
+case "$HOST" in
+    *:*)
+        PORT="${HOST##*:}"
+        HOST="${HOST%%:*}"
+        ;;
+esac
+PORT="${LOOKER_CLI_PORT:-$PORT}"
+
+CONN=(--host "$HOST" --port "$PORT" --verify-ssl="${LOOKER_VERIFY_SSL:-true}")
+
+login() {
+    "$CLI" "${CONN[@]}" \
+        --client-id "$LOOKER_CLIENT_ID" \
+        --client-secret "$LOOKER_CLIENT_SECRET" \
+        session login >/dev/null
+    chmod 600 "$AUTH_FILE" 2>/dev/null || true
+}
+
+# A stored token is reused while it is fresh and belongs to this host. Age is
+# checked by file mtime rather than the recorded expiry so this stays portable.
+token_is_usable() {
+    [ -f "$AUTH_FILE" ] || return 1
+    grep -q "\"$HOST\"" "$AUTH_FILE" || return 1
+    [ -z "$(find "$AUTH_FILE" -mmin "+$TOKEN_MAX_AGE_MINUTES" 2>/dev/null)" ] || return 1
+}
+
+case "${1:-}" in
+    login)
+        login
+        echo "Logged in to $HOST; token stored in $AUTH_FILE."
+        exit 0
+        ;;
+    logout)
+        exec "$CLI" "${CONN[@]}" --token-file session logout
+        ;;
+    token)
+        # Bare access token, for clients that take a token rather than a header
+        # command — e.g. Codex's `bearer_token_env_var`:
+        #   export LOOKER_MCP_TOKEN=$(./lk token)
+        exec "$CLI" "${CONN[@]}" \
+            --client-id "$LOOKER_CLIENT_ID" \
+            --client-secret "$LOOKER_CLIENT_SECRET" \
+            session login --text
+        ;;
+    headers)
+        # Auth headers for the Looker-managed MCP server (LOOKER_BASE_URL/mcp),
+        # in the JSON shape Claude Code's `headersHelper` expects. Claude Code
+        # runs this on every connect and again after a 401/403, so a fresh
+        # hour-long token is minted each time rather than reusing the one in
+        # ~/.looker_auth. Nothing but the JSON may go to stdout.
+        token=$("$CLI" "${CONN[@]}" \
+            --client-id "$LOOKER_CLIENT_ID" \
+            --client-secret "$LOOKER_CLIENT_SECRET" \
+            session login --text) || {
+            echo "Error: could not obtain a Looker access token." >&2
+            exit 1
+        }
+        printf '{"Authorization": "Bearer %s"}\n' "$token"
+        exit 0
+        ;;
+    "")
+        exec "$CLI" "${CONN[@]}" --help
+        ;;
+esac
+
+token_is_usable || login
+
+# If the token turns out to be rejected anyway, the command fails rather than
+# retrying — a blind retry would re-run mutating commands. Recover with:
+#   ./lk login
+exec "$CLI" "${CONN[@]}" --token-file "$@"

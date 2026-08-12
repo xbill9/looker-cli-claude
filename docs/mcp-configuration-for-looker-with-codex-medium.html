@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MCP Configuration for Looker with Codex</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MCP Configuration for Looker with Codex</h1>
+</header>
+<h1 id="mcp-configuration-for-looker-with-codex">MCP Configuration for
+Looker with Codex</h1>
+<p>This article covers the MCP setup and configuration for using Looker
+with Codex to enhance and extend Looker operations over MCP.</p>
+<figure>
+<img
+src="https://raw.githubusercontent.com/xbill9/looker-mcp-codex/main/docs/images/cover-codex.jpg"
+alt="Looker + MCP — Configuring the Codex CLI" />
+<figcaption aria-hidden="true">Looker + MCP — Configuring the Codex
+CLI</figcaption>
+</figure>
+<h4 id="deja-vu-what-is-old-is-new">Deja Vu — What is Old is New!</h4>
+<p>This paper is the third pass at the same idea. The original used
+Gemini CLI:</p>
+<p><a
+href="https://medium.com/google-cloud/mcp-configuration-for-looker-with-gemini-cli-55e5671197fb">MCP
+Configuration for Looker with Gemini CLI</a></p>
+<p>then Antigravity CLI:</p>
+<p><a
+href="https://dev.to/gde/mcp-configuration-for-looker-with-antigravity-cli-504d">MCP
+Configuration for Looker with Antigravity CLI</a></p>
+<p>then Claude Code:</p>
+<p><a
+href="https://dev.to/gde/mcp-configuration-for-looker-with-claude-code-21jh">MCP
+Configuration for Looker with Claude Code</a></p>
+<p>In this updated version, Codex is used to integrate Looker
+functionality. The Looker side of the stack does not change at all —
+that is the whole point of MCP. What changes is the client: how the
+server gets registered, how tool calls get approved, and where the agent
+reads its project instructions from.</p>
+<h4 id="what-is-looker">What is Looker?</h4>
+<p>Looker is a cloud-based business intelligence (BI) and data analytics
+platform owned by Google Cloud that enables organizations to analyze,
+visualize, and share data in real-time. It uses a unique modeling
+language called LookML to define data relationships, offering a
+centralized “single source of truth” for metrics. Looker focuses on
+embedded analytics and live data exploration rather than storing data
+itself.</p>
+<p>More information is available here:</p>
+<p><a href="https://cloud.google.com/looker">Looker business
+intelligence platform embedded analytics</a></p>
+<h4 id="key-features-and-capabilities">Key Features and
+Capabilities</h4>
+<ul>
+<li>LookML (Looker Modeling Language): A code-based modeling language
+that allows data analysts to define dimensions, aggregates, and
+calculations, ensuring consistent metrics across the organization.</li>
+<li>Live Data Connection: Looker does not import data; it queries your
+data warehouse directly (e.g., BigQuery, Snowflake, Redshift) in
+real-time, ensuring data is always up to date.</li>
+<li>Embedded Analytics: Looker can be embedded into other applications,
+websites, or portals, allowing businesses to provide data insights
+directly within their own tools.</li>
+<li>Self-Service BI: Users can explore data, create visualizations, and
+build custom dashboards using a browser-based interface without needing
+deep SQL knowledge.</li>
+<li>Workflow Integration: Actionable data insights can be sent directly
+to other applications, such as triggering an email based on specific
+business rules.</li>
+</ul>
+<h4 id="looker-i-thought-big-query-did-everything">Looker? I thought Big
+Query Did everything!</h4>
+<p>Semantic layer is where all the cool kids hang out.</p>
+<h4 id="what-is-mcp">What is MCP?</h4>
+<p>Unless you have been living off grid without Internet- MCP is the new
+universal connector and next “Big Thing”.</p>
+<p>More information is here:</p>
+<p><a
+href="https://cloud.google.com/discover/what-is-model-context-protocol">What
+is Model Context Protocol (MCP)? A guide</a></p>
+<h4 id="google-mcp-strategy">Google MCP Strategy</h4>
+<p>Google has gone all-in for all the core Cloud services to provide
+connections over MCP. An overview is here:</p>
+<p><a href="https://docs.cloud.google.com/mcp/overview">Google Cloud MCP
+servers overview | Google Cloud Documentation</a></p>
+<h4 id="the-looker-managed-mcp-server">The Looker-managed MCP
+server</h4>
+<p>Until recently, connecting an agent to Looker meant running MCP
+Toolbox — the “swiss army” knife that connects your data sources to MCP
+— as a local binary you downloaded, configured and kept up to date.</p>
+<p>Looker now hosts that server for you. Every Looker (Google Cloud
+core) and Looker (original) instance exposes an MCP endpoint on its own
+base URL:</p>
+<pre class="plaintext"><code>https://780eb09e-7dab-4076-9ec1-ecf9d8414630.looker.app/mcp</code></pre>
+<p>This is the <strong>native</strong> install: no binary, no download,
+no local process to babysit. The instance <em>is</em> the server. It is
+the same Toolbox software underneath — ask the endpoint who it is and it
+answers <code>{"name":"Toolbox"}</code> — but Google runs it, patches it
+and scales it.</p>
+<p><a
+href="https://docs.cloud.google.com/looker/docs/mcp">Looker-managed MCP
+server | Google Cloud Documentation</a></p>
+<h4 id="looker-mcp-setup">Looker MCP Setup</h4>
+<p>The native server is <strong>admin-gated</strong>. Before any client
+can connect, an admin has to switch it on:</p>
+<p><strong>Admin → Platform → Model Context Protocol</strong></p>
+<p>That page enables the server and holds the allowlist of which AI
+tools agents may call. A tool switched off there does not appear in any
+client’s tool list, whatever the client asks for.</p>
+<p><a
+href="https://docs.cloud.google.com/looker/docs/admin-panel-platform-mcp">Admin
+settings — Model Context Protocol (MCP) | Google Cloud
+Documentation</a></p>
+<p>Two caveats before you start: the feature is in
+<strong>preview</strong> and customer-hosted instances are not
+supported, and the documented auth path is <strong>OAuth 2.1 with
+PKCE</strong>, which needs an admin to register each agent as an OAuth
+client. This paper takes the shorter road for evaluation — an API3 key
+exchanged for a short-lived bearer token — and returns to OAuth at the
+end.</p>
+<p>The older local-binary route still works, and is documented here:</p>
+<p><a
+href="https://docs.cloud.google.com/looker/docs/connect-ide-to-looker-using-mcp-toolbox">Use
+Looker with MCP, Gemini CLI and other Agents | Google Cloud
+Documentation</a></p>
+<h4 id="codex">Codex</h4>
+<p>Codex is OpenAI’s terminal-driven, agent-assisted coding CLI — the
+same category of tool as Gemini CLI, Antigravity CLI and Claude Code,
+and like all of them it ships a full MCP client.</p>
+<p>Install it with npm:</p>
+<pre class="shell"><code>npm install -g @openai/codex</code></pre>
+<p>or with Homebrew:</p>
+<pre class="shell"><code>brew install codex</code></pre>
+<p>Then authenticate — Codex will open a browser to sign in with your
+ChatGPT account, or you can supply an API key:</p>
+<pre class="shell"><code>codex login</code></pre>
+<p>Verify the install:</p>
+<pre class="shell"><code>codex --version</code></pre>
+<h4 id="google-skills-repository">Google Skills Repository</h4>
+<p>Google Skills give your MCP client well known approaches to work with
+the core Google products including Big Query.</p>
+<p>The full details are here:</p>
+<p><a
+href="https://cloud.google.com/blog/topics/developers-practitioners/level-up-your-agents-announcing-googles-official-skills-repository">Level
+Up Your Agents: Announcing Google’s Official Skills Repository | Google
+Cloud Blog</a></p>
+<p>To install the Skills:</p>
+<pre class="shell"><code>npx skills install github.com/google/skills</code></pre>
+<p>This vendors the skills into <code>.agents/skills/</code> and records
+them in <code>skills-lock.json</code>. They are client-neutral markdown,
+so the same checkout serves Codex, Claude Code and Gemini CLI.</p>
+<h4 id="what-you-talkin-bout-willis">What you talkin ’bout Willis?</h4>
+<p>That was a lot of setup! But wait- there is more! So what is
+different about this lab compared to all the others out there?</p>
+<p>This demo is one of the first deep dives into configuring Looker for
+MCP with Codex. Codex provides a complete working environment with a
+full MCP client. Looker exposes the key features of the platform over
+the MCP layer.</p>
+<p>The interesting wrinkle in the Codex version is
+<strong>approvals</strong>. Roughly half of the ~50 Looker tools mutate
+your live instance — <code>make_look</code>,
+<code>make_dashboard</code>, <code>add_dashboard_element</code>, the
+<code>*_project_file</code> family, the git and dev-mode tools. Codex
+has a first-class per-server approval mode, so this repo pins write
+tools behind a confirmation prompt while leaving discovery and querying
+to run freely. Read on.</p>
+<h4 id="where-do-i-start">Where do I start?</h4>
+<p>The strategy for configuring Looker with MCP is an incremental step
+by step approach.</p>
+<p>First, the Looker configuration settings are retrieved. Then, these
+settings are used to configure Codex. Finally- Codex is used as a MCP
+client to the Looker environment. Several samples are run using the
+Looker MCP Tools directly from Codex.</p>
+<h4 id="looker-admin-setup">Looker Admin Setup</h4>
+<p>For Looker (Google Cloud core) — Admins do not directly create keys
+for standard users; instead, they enable the permission for users to
+manage their own.</p>
+<p>Navigate to the <a
+href="https://docs.cloud.google.com/looker/docs/admin-panel-users-users">Looker
+Admin Users page</a> (Admin &gt; Users).</p>
+<ol type="1">
+<li>Click Edit next to the specific user.</li>
+<li>Locate the API Keys field and toggle it to Enabled.</li>
+<li>Once enabled, the user can generate their own keys by going to their
+personal <a
+href="https://docs.cloud.google.com/looker/docs/user-account">Account
+settings page</a> (User Icon &gt; Account &gt; API Keys).</li>
+</ol>
+<h4 id="looker-instance-url">Looker Instance URL</h4>
+<p>To connect to the Looker setup — you need to derive your Looker Base
+URL. Typically this will be the hostname in the Looker app domain.</p>
+<p>For the test instance- this is an example of what the URL looks like
+(note the HTTPS prefix and no trailing slash):</p>
+<pre class="plaintext"><code>https://780eb09e-7dab-4076-9ec1-ecf9d8414630.looker.app</code></pre>
+<h4 id="looker-user-setup">Looker User Setup</h4>
+<p>First Login to your Looker User environment. Go to
+Profile-&gt;Account (in upper right hand side) and bring up the user
+settings:</p>
+<p><img
+src="https://cdn-images-1.medium.com/max/717/1*jQYo5HxPJlG7AgFFSOUKZA.jpeg" /></p>
+<p>If the API Key box is unavailable- contact your Admin to enable the
+API setup on a per user basis.</p>
+<p>Once you have access to create API keys- the settings will look
+similar to this:</p>
+<p><img
+src="https://cdn-images-1.medium.com/max/628/1*Lr2mRWlXuO0py9fVOUAJ5A.png" /></p>
+<p>Then click the “Manage” button to setup the API Keys:</p>
+<p><img
+src="https://cdn-images-1.medium.com/max/1024/1*0t4hhGedONm5LvI7mMWX1w.png" /></p>
+<p>Click Create New API key to generate the API Key. Save the
+<strong>Client ID</strong> and <strong>Client Secret</strong>.</p>
+<h4 id="setup-the-basic-codex-environment">Setup the Basic Codex
+Environment</h4>
+<p>At this point you should have a working Shell environment and a
+working Codex installation. All of the relevant code examples and
+documentation is available in GitHub.</p>
+<p>The next step is to clone the GitHub repository to your local
+environment:</p>
+<pre class="shell"><code>cd ~
+git clone https://github.com/xbill9/looker-mcp-codex
+cd looker-mcp-codex</code></pre>
+<p>Then run <strong>init.sh</strong> from the cloned directory.</p>
+<p>The script will attempt to determine your shell environment and set
+the correct variables:</p>
+<pre class="shell"><code>source init.sh</code></pre>
+<p>This helper script will prompt for your Looker Instance details:</p>
+<pre class="shell"><code>xbill@penguin:~/looker-mcp-codex$ source set_env.sh
+Looker Base URL (e.g. https://your-company.looker.com): https://780eb09e-7dab-4076-9ec1-ecf9d8414630.looker.app
+Looker Client ID:
+Looker Client Secret:
+Environment successfully set up.
+
+Current Environment (.env) — secret masked:
+GOOGLE_GENAI_USE_VERTEXAI=True
+GOOGLE_CLOUD_PROJECT=comglitn
+GOOGLE_CLOUD_LOCATION=us-central1
+LOOKER_BASE_URL=https://780eb09e-7dab-4076-9ec1-ecf9d8414630.looker.app
+LOOKER_CLIENT_ID= **************
+LOOKER_CLIENT_SECRET= ********
+LOOKER_VERIFY_SSL=true
+LOOKER_MCP_URL=https://780eb09e-7dab-4076-9ec1-ecf9d8414630.looker.app/mcp</code></pre>
+<p>If your session times out or you need to re-authenticate- you can run
+the <strong>set_env.sh</strong> script to reset your environment
+variables:</p>
+<pre class="shell"><code>source set_env.sh</code></pre>
+<p>One difference worth calling out versus the Claude Code write-up:
+with the native server you <strong>do</strong> need the environment set
+before launching Codex. There is no launcher script to read
+<code>.env</code> on your behalf — Codex resolves
+<code>bearer_token_env_var</code> from its own environment at connect
+time. So <code>source set_env.sh</code>, then export the token, then
+start Codex.</p>
+<h4 id="codex-mcp-configuration">Codex MCP Configuration</h4>
+<p>Codex reads MCP servers from TOML. With a hosted server there is no
+command to launch — only a URL to point at and a token to present:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[mcp_servers.&quot;</span><span class="dt">looker-managed&quot;</span><span class="kw">]</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="dt">url</span> <span class="op">=</span> <span class="st">&quot;https://780eb09e-7dab-4076-9ec1-ecf9d8414630.looker.app/mcp&quot;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">bearer_token_env_var</span> <span class="op">=</span> <span class="st">&quot;LOOKER_MCP_TOKEN&quot;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="dt">enabled</span> <span class="op">=</span> <span class="cn">true</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="dt">tool_timeout_sec</span> <span class="op">=</span> <span class="dv">120</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="dt">default_tools_approval_mode</span> <span class="op">=</span> <span class="st">&quot;writes&quot;</span></span></code></pre></div>
+<p>Or, without editing TOML by hand:</p>
+<pre class="shell"><code>codex mcp add looker-managed \
+  --url &quot;$LOOKER_MCP_URL&quot; \
+  --bearer-token-env-var LOOKER_MCP_TOKEN</code></pre>
+<p>Four of those lines are the whole story:</p>
+<ul>
+<li><strong><code>url</code></strong> replaces the old
+<code>command</code>/<code>args</code> pair. There is no launcher script
+and no binary path, because there is no local process — Codex speaks
+Streamable HTTP straight to the instance.</li>
+<li><strong><code>bearer_token_env_var</code></strong> names an
+environment variable rather than holding a secret. Codex reads it at
+connect time and sends it as <code>Authorization: Bearer</code>. The
+config file stays safe to commit.</li>
+<li><strong><code>tool_timeout_sec = 120</code></strong> — a
+<code>run_dashboard</code> against a ten-tile dashboard is ten warehouse
+queries. Two minutes is a realistic ceiling.</li>
+<li><strong><code>default_tools_approval_mode = "writes"</code></strong>
+— this is the important one. Discovery and query tools run unattended;
+anything that mutates the instance stops and asks. See the approvals
+section below.</li>
+</ul>
+<p><code>startup_timeout_sec</code> is gone from the config, and so is
+the reason for it. It existed because a 292 MB binary had to boot and
+handshake before Codex would call the server ready. An HTTP endpoint
+that is already running has nothing to wait for.</p>
+<p>The token comes from the Looker CLI wrapper in the repo, which
+exchanges the API3 credentials in <code>.env</code> for a one-hour
+access token:</p>
+<pre class="shell"><code>export LOOKER_MCP_TOKEN=$(./lk token)
+codex</code></pre>
+<p>That is the one wrinkle of this approach, and it is worth stating
+plainly: Looker access tokens live for an hour, and
+<code>bearer_token_env_var</code> is read from the environment Codex was
+launched with. When the token expires, the server starts returning 401s
+and the fix is to re-export and restart Codex. Clients that support a
+<em>command</em> for headers — Claude Code’s <code>headersHelper</code>,
+for instance — can re-mint the token on every reconnect and heal
+automatically. Codex trades that for a simpler config.</p>
+<p>The alternative, and the right answer for anything beyond evaluation,
+is to register an OAuth client and let Codex run the PKCE flow. The
+instance advertises the endpoints at
+<code>/.well-known/oauth-authorization-server</code>; per-user OAuth
+also means Looker attributes each action to a person rather than to a
+shared key.</p>
+<h4 id="trusting-the-project">Trusting the Project</h4>
+<p>Codex will not load a project-scoped config from a directory it does
+not trust. On first launch inside the repo it will ask; approve it once
+and the setting sticks:</p>
+<pre class="plaintext"><code>xbill@penguin:~/looker-mcp-codex$ codex
+
+  You are running Codex in ~/looker-mcp-codex
+
+  Since this folder is not version-control trusted, choose how to proceed:
+
+  &gt; 1. Yes, allow Codex to work in this folder
+    2. No, exit</code></pre>
+<p>If you would rather register the server globally instead of
+per-project, put the same <code>[mcp_servers."looker-managed"]</code>
+block in <code>~/.codex/config.toml</code>. With a hosted server this is
+a more attractive option than it used to be: there is no launcher script
+or binary living in the checkout, so nothing about the config is
+path-dependent any more — only <code>LOOKER_MCP_TOKEN</code> has to be
+present in the environment.</p>
+<h4 id="initial-connection">Initial Connection</h4>
+<p>Start Codex from the project directory:</p>
+<pre class="shell"><code>xbill@penguin:~/looker-mcp-codex$ codex</code></pre>
+<p>Then use <strong>/mcp</strong> to confirm the server came up:</p>
+<pre class="plaintext"><code>&gt; /mcp
+
+  MCP Servers
+
+  looker-managed   ✔ connected   40 tools
+    url      https://780eb09e-7dab-4076-9ec1-ecf9d8414630.looker.app/mcp
+    auth     bearer (LOOKER_MCP_TOKEN)
+    approval writes</code></pre>
+<p>You can also check without entering the TUI at all, which is handy in
+CI or when scripting a machine setup:</p>
+<pre class="shell"><code>xbill@penguin:~/looker-mcp-codex$ codex mcp list
+Name            Transport  Url                                    Status
+looker-managed  http       https://780eb09e-...looker.app/mcp     enabled</code></pre>
+<p>and confirm Codex actually parsed every option — a typo’d key is
+silently ignored, so this is the fast way to prove the approval mode
+took effect:</p>
+<pre class="shell"><code>xbill@penguin:~/looker-mcp-codex$ codex mcp get looker-managed
+looker-managed
+  enabled: true
+  transport: streamable_http
+  url: https://780eb09e-7dab-4076-9ec1-ecf9d8414630.looker.app/mcp
+  bearer_token_env_var: LOOKER_MCP_TOKEN
+  tool_timeout_sec: 120
+  default_tools_approval_mode: writes
+  remove: codex mcp remove looker-managed</code></pre>
+<p>Now ask for the inventory:</p>
+<pre class="plaintext"><code>&gt; list the looker mcp tools
+
+Here are the Looker MCP tools available in this session, grouped by function:
+
+Metadata / Discovery
+
+- get_models — list LookML models
+- get_explores — list explores
+- get_dimensions — list dimensions in an explore
+- get_measures — list measures in an explore
+- get_filters — list filters
+- get_parameters — list parameters
+- get_dashboards — list dashboards
+- get_looks — list Looks
+- get_projects — list LookML projects
+
+Querying / Running
+
+- query — run a Looker query
+- query_sql — run raw SQL against a connection
+- query_url — build a query URL
+- run_look — run a saved Look
+- run_dashboard — run a dashboard
+- run_lookml_tests / get_lookml_tests — LookML data tests
+
+Connections / Database Introspection
+
+- get_connections
+- get_connection_databases
+- get_connection_schemas
+- get_connection_tables
+- get_connection_table_columns
+
+Content Creation                                    [approval required]
+
+- make_look — create a Look
+- make_dashboard — create a dashboard
+- add_dashboard_element — add a tile to a dashboard
+- add_dashboard_filter — add a filter to a dashboard
+- create_view_from_table — generate a LookML view from a DB table
+- generate_embed_url — create an SSO embed URL
+
+LookML Project / File Management                    [approval required]
+
+- get_project_files / get_project_file / create_project_file /
+  update_project_file / delete_project_file
+- get_project_directories / create_project_directory / delete_project_directory
+- validate_project
+
+Development Mode                                    [approval required]
+
+- dev_mode — toggle development mode
+
+Git branch management is not part of the managed tool set — see the note
+after this list.
+
+Health / Diagnostics
+
+- health_analyze
+- health_pulse
+- health_vacuum
+
+That&#39;s 40 tools total. The three groups marked [approval required] will prompt
+before running, per default_tools_approval_mode = &quot;writes&quot; in .codex/config.toml.
+
+Want me to run one of them (models, connections, or dashboards) to verify connectivity?</code></pre>
+<h4 id="what-the-native-server-does-not-do">What the native server does
+not do</h4>
+<p>Two capabilities from the local-binary era are absent from the
+managed tool set.</p>
+<p><strong>Git branch management.</strong>
+<code>list_git_branches</code>, <code>get_git_branch</code>,
+<code>create_git_branch</code>, <code>switch_git_branch</code> and
+<code>delete_git_branch</code> are not exposed. LookML file editing and
+<code>dev_mode</code> are — so you can work in dev mode, you just cannot
+open the branch over MCP. The Looker CLI covers it:</p>
+<pre class="shell"><code>./lk api project create_git_branch --project_id my_project --name my_branch
+./lk project checkout my_project my_branch
+./lk project branch my_project</code></pre>
+<p><strong><code>get_field_value_suggestions</code>.</strong> Ask for
+valid filter values and the model has to query the field’s suggest
+explore directly instead.</p>
+<p>Everything else — discovery, querying, content creation, LookML
+files, validation, tests, health — is present. So a LookML change
+becomes: open the branch with the CLI, edit and validate over MCP,
+deploy with the CLI (<code>./lk project deploy</code>, which never had
+an MCP equivalent).</p>
+<h4 id="a-word-about-approvals">A Word About Approvals</h4>
+<p>This is where the Codex configuration earns its keep. Codex separates
+two things that other clients tend to conflate: the
+<strong>sandbox</strong> (what the agent may do to your filesystem and
+network) and <strong>tool approval</strong> (which MCP tools may fire
+without a human in the loop).</p>
+<p><code>default_tools_approval_mode = "writes"</code> means: run
+read-only tools freely, prompt before anything that changes state. A
+<code>make_dashboard</code> call surfaces as:</p>
+<pre class="plaintext"><code>  ⚠ looker-managed › make_dashboard  wants to run
+
+    title        VIP Customer Intelligence v2
+    description  Real-time insights into top-performing revenue segments
+    model        advanced_ecomm
+
+  &gt; 1. Yes, run it
+    2. Yes, and don&#39;t ask again for make_dashboard
+    3. No, and tell Codex what to do differently</code></pre>
+<p>Option 2 is worth understanding before you reach for it. Approving
+<code>make_dashboard</code> for the session is low-risk — it creates new
+content. Approving <code>delete_project_file</code> for the session is
+not. The Looker toolsets do not distinguish create from destroy in their
+naming, so read the tool name, not the category.</p>
+<p>The blunter instruments still exist if you want them —
+<code>--ask-for-approval never</code> for a fully unattended run,
+<code>--sandbox read-only</code> to clamp the agent’s filesystem access.
+Neither is a substitute for the per-tool mode: sandbox settings govern
+the agent’s own shell, not what an MCP server does to a remote SaaS
+instance over HTTPS. A read-only sandbox will happily let a tool call
+drop a LookML file on your Looker instance.</p>
+<p>The other half of the safety story is <code>AGENTS.md</code>, which
+Codex reads automatically from the project root. That is where this repo
+records the rules the config file cannot express — pass filter values
+bare, work LookML changes on a dev-mode branch, don’t use mutating tools
+for routine verification, never print the client secret. Same role as
+<code>CLAUDE.md</code> for Claude Code and <code>GEMINI.md</code> for
+Gemini CLI; all three live side by side in the checkout.</p>
+<h4 id="all-right-already-can-you-actually-do-something-with-looker">All
+Right Already! Can you actually do something with Looker?</h4>
+<p>At this point- Codex is connected to the Looker-managed MCP server
+and has direct access to all the Looker MCP Tools. Any operations with
+the Tools come back directly into the Codex context.</p>
+<p>To get an overview of Dashboards:</p>
+<pre class="plaintext"><code>&gt; get_dashboards
+
+• looker-managed › get_dashboards
+
+Here are the dashboards in your Looker instance (16 total):
+
+  ID   Title                                       Description
+  ──   ─────────────────────────────────────────   ──────────────────────────────────────
+   1   2) Business Pulse - Intermediate            —
+   2   1) Business Pulse - Basic                   —
+   3   3) Business Pulse - Advanced                —
+   4   Agreement for Shared Use of this Instance   —
+   5   test                                        —
+   6   test                                        —
+   7   Inventory                                   —
+   8   TestJC                                      —
+   9   Self-serve industry                         —
+  10   TestOrdersByCity                            —
+  11   My Dashboard                                —
+  12   test-orders                                 —
+  13   E-commerce Overview                         Key e-commerce metrics
+  14   💎 VIP Customer Intelligence                Advanced LTV and Ranking logic
+  15   ☁️ Cloud Optimization Hub                    AI-driven cost savings, Recommender API
+  16   Top Users &amp; Countries Overview              Top spenders and high-performing countries
+
+A few observations:
+- Several test/scratch dashboards (5, 6, 8, 10, 11, 12) look like leftovers — cleanup candidates.
+- The numbered &quot;Business Pulse&quot; set (1–3) are example/tutorial dashboards.
+- The substantive content is 13–16.
+
+Want me to run one of these (run_dashboard), or inspect the tiles on a specific one?</code></pre>
+<p>You can also get models:</p>
+<pre class="plaintext"><code>&gt; get_models
+
+• looker-managed › get_models
+
+Here are the LookML models in your instance (11 total):
+
+  Model                    Label                 Project                             Connection(s)
+  ──────────────────────   ───────────────────   ─────────────────────────────────   ─────────────────────────
+  basic_ecomm              Z) Sample LookML      sample_thelook_ecommerce            default_bigquery_connection
+  intermediate_ecomm       Z) Sample LookML      sample_thelook_ecommerce            default_bigquery_connection
+  advanced_ecomm           Z) Sample LookML      sample_thelook_ecommerce            default_bigquery_connection
+  extension-api-explorer   Extension API Expl.   marketplace_extension_api_explorer  default_bigquery_connection
+  data_block_acs_bigquery  Census Data Block     marketplace_acs_census-v2           american-community-survey
+  gcp_billing_block        Google Cloud Billing  marketplace_gcp-billing             billing-export-sample
+  chrome-ux-block          Chrome UX Block       marketplace_chrome-ux-block         chrome-ux
+  london_bicycles          London Bicycles       london_bicycles                     london-bicycles
+  gde_rk                   Gde Rk                gde_rk                              (8 connections)
+  data-dictionary          Data Dictionary       marketplace_extension_data_dict.    default_bigquery_connection
+  bq_agent_analytics       Bq Agent Analytics    agent_events                        default_bigquery_connection
+
+Notable groupings:
+- theLook e-commerce samples (basic/intermediate/advanced_ecomm) — Looker&#39;s standard demo dataset.
+- Marketplace blocks — Census/ACS, GCP Billing, Chrome UX, Data Dictionary, API Explorer.
+- Public datasets — london_bicycles.
+- gde_rk — a multi-connection catch-all model.
+
+Want me to pull the explores for one of these? advanced_ecomm is the richest starting point.</code></pre>
+<p>And drill into the details — the
+<code>advanced_example_ecommerce</code> explore is where the interesting
+LookML lives:</p>
+<pre class="plaintext"><code>&gt; get_measures for advanced_example_ecommerce
+
+• looker-managed › get_measures
+
+20 measures, grouped by view:
+
+order_items — core sales metrics
+  order_items.count                 # of Order Items        count
+  order_items.total_sale_price      Sales                   sum
+  order_items.average_sale_price    Average Price           average
+  order_items.first_order_date      First Order Date        date
+  order_items.count_for_drill_*     drill-support counts    count
+
+users / products / inventory_items
+  users.count                       # of Users              count_distinct
+  products.count                    Count Distinct Products count_distinct
+  inventory_items.total_cost        Total Cost              sum
+  inventory_items.average_cost      Average Cost            average
+
+User-summary measures (filtered vs. lifetime symmetric-aggregate patterns)
+  user_summary_filtered.total_sales_for_these_users      Sales (Filtered Summary)   sum_distinct
+  user_summary_unfiltered.total_sales_for_these_users    Sales (Lifetime)           sum_distinct
+  user_summary_filtered.total_items_for_these_users      Items (Filtered Summary)   sum_distinct
+  user_summary_unfiltered.total_items_for_these_users    Items (Lifetime)           sum_distinct
+
+Special measures — advanced ratio/comparison
+  user_summary_and_order_items_fields.percent_of_lifetime_unfiltered_sales
+  user_summary_and_order_items_fields.filtered_average_vs_unfiltered_average
+
+Notes:
+- The filtered vs. lifetime pairs showcase Looker&#39;s pattern for comparing a filtered
+  subset against a user&#39;s full lifetime totals.
+- The count_for_*_drill measures exist to support drill-down on dashboard tiles.</code></pre>
+<p>Let’s see what VIP tiers look like:</p>
+<pre class="plaintext"><code>• looker-managed › query
+
+VIP Tiers — Lifetime Revenue Rank Group (advanced_example_ecommerce)
+
+  Rank Group    Users    Total Sales   Order Items   Avg Sale Price
+  ───────────   ──────   ───────────   ───────────   ──────────────
+  1st 25%       15,569    $4,134,224        53,458           $77.34
+  2nd 25%       16,554    $1,931,678        36,005           $53.65
+  3rd 25%       16,557      $947,615        24,026           $39.44
+  Top 1000 ⭐    1,000      $731,207         4,893          $149.44
+  Bottom 25%    16,560      $382,605        17,800           $21.49
+
+What this shows
+
+- Steep revenue concentration. The top quartile drives $4.13M — about 55% of the
+  ~$7.4M lifetime total — while the bottom 25% contributes only ~5%, despite having
+  more users.
+- The &quot;Top 1000&quot; is a distinct elite segment, not a quartile — it overlaps with the
+  1st 25%. Just 1,000 users generate $731K, and their $149 average sale price is
+  nearly 2× the top quartile&#39;s and 7× the bottom&#39;s.
+- Basket value declines cleanly down the tiers: $77 → $54 → $39 → $21. Rank
+  correlates strongly with per-item spend, not just order count.
+
+Reading note: the quartile groups partition all purchasing users, while Top 1000 is
+a separate flag sitting inside the 1st quartile — its dollars are also counted in the
+1st 25% row. Don&#39;t sum the column.</code></pre>
+<h4 id="the-first-approval-prompt">The First Approval Prompt</h4>
+<p>Now build a Look — and this is where the <code>writes</code> approval
+mode fires for the first time:</p>
+<pre class="plaintext"><code>&gt; save that as a Look
+
+  ⚠ looker-managed › make_look  wants to run
+
+    model     advanced_ecomm
+    explore   advanced_example_ecommerce
+    title     VIP Tiers — Lifetime Revenue Rank Groups
+    fields    user_summary_unfiltered.user_revenue_rank_group,
+              users.count, order_items.total_sale_price,
+              order_items.count, order_items.average_sale_price
+    sorts     order_items.total_sale_price desc
+    vis       looker_bar
+
+  &gt; 1. Yes, run it
+    2. Yes, and don&#39;t ask again for make_look
+    3. No, and tell Codex what to do differently
+
+  [1]
+
+• looker-managed › make_look
+
+✅ Look created — &quot;VIP Tiers — Lifetime Revenue Rank Groups&quot;
+
+- ID: 8
+- URL: /looks/8
+- Viz: horizontal bar chart, sorted by total sales, value labels on
+- Saved to: your personal folder
+
+Want me to add it to a dashboard, or create companion Looks (Top 1000 by
+country/category)?</code></pre>
+<p>The prompt shows the full argument payload before anything touches
+the instance. That is the part worth having — you can see
+<code>explore</code>, <code>fields</code> and <code>folder</code> and
+catch a wrong model before it creates content, rather than after.</p>
+<h4 id="but-wait-theres-more">But Wait! There’s More!</h4>
+<p>Once the Tools are exposed by MCP they have full access to Looker
+resources. Time to update a Dashboard — three mutations, batched into
+one approval round:</p>
+<pre class="plaintext"><code>&gt; add it to dashboard 14 and create the companion Looks
+
+I&#39;ll do all three — add the tile to dashboard 14, and create both companion Looks.
+
+  ⚠ looker-managed › add_dashboard_element  →  dashboard_id 14      [1] approved
+  ⚠ looker-managed › make_look  →  &quot;Top 1000 VIPs by Country&quot;       [1] approved
+  ⚠ looker-managed › make_look  →  &quot;Top 1000 VIPs by Category&quot;      [1] approved
+
+• looker-managed › (3 calls)
+
+All three succeeded. Pulling the underlying data so you can see what they contain.
+
+• looker-managed › (2 calls)
+
+✅ Dashboard tile added
+&quot;VIP Tiers — Lifetime Revenue Rank Groups&quot; is now a tile on 💎 VIP Customer
+Intelligence (dashboard 14).
+
+✅ Look 9 — Top 1000 VIPs by Country (/looks/9)
+
+  Country          VIP Users   Total Sales   Avg Price
+  ──────────────   ─────────   ───────────   ─────────
+  China                  359      $259,129     $147.23
+  United States          224      $163,185     $147.41
+  Brasil                 143      $106,613     $155.64
+  South Korea             53       $37,381     $129.34
+  France                  52       $37,178     $149.31
+  Spain                   47       $35,646     $163.51
+  Germany                 43       $32,112     $158.19
+  United Kingdom          37       $28,494     $178.09
+  …6 more (AU, BE, JP, PL)
+
+✅ Look 10 — Top 1000 VIPs by Product Category (/looks/10)
+
+  Category              Total Sales   Items   Avg Price
+  ───────────────────   ───────────   █████   ─────────
+  Outerwear &amp; Coats        $245,412     664     $369.60
+  Suits &amp; Sport Coats       $70,838     278     $254.81
+  Jeans                     $58,421     423     $138.11
+  Active                    $48,295     220     $219.52
+  Sweaters                  $36,618     325     $112.67
+  Dresses                   $35,942     185     $194.28
+  …9 more
+
+Notable insights
+- Geography is concentrated: China + US + Brasil = ~726 of the 1,000 VIPs. The UK
+  has the highest per-item spend ($178) despite few users.
+- Outerwear dominates category spend — $245K, more than the next three categories
+  combined, at a $369.60 average sale price. High-ticket outerwear is the signature
+  purchase of your best customers.</code></pre>
+<p>This will look similar to:</p>
+<p><img
+src="https://cdn-images-1.medium.com/max/1024/1*3JaHl5lIFlvUVvSSrlvEYw.png" /></p>
+<p>And can also be accessed directly in Looker:</p>
+<p><img
+src="https://cdn-images-1.medium.com/max/1024/1*ZLW3bl8JlEIa-BUPU8V-xw.png" /></p>
+<h4 id="so-what-else-can-codex-do">So what else can Codex do?</h4>
+<p>Health checks and instance maintenance — and the first real one
+surfaced a finding, just not the expected kind:</p>
+<pre class="plaintext"><code>&gt; run a full health sweep
+
+Running usage analysis, six pulse checks, and cleanup candidates in parallel.
+
+• looker-managed › (10 calls)
+
+The health sweep surfaced a real finding on the first try — just not the one we were
+shopping for.
+
+Result: the native health tools are blocked by a permissions gap
+
+Almost every check failed identically:
+  status=400 Bad Request error={&quot;message&quot;:&quot;Access Denied&quot;, .../queries/run...}
+
+  Check                                Outcome
+  ──────────────────────────────────   ────────────────────────────────────────────
+  health_analyze models / explores     ❌ Access Denied / null
+  health_pulse db_connections          ❌ Access Denied
+  health_pulse dashboard_errors        ❌ Access Denied
+  health_pulse dashboard_performance   ❌ Access Denied
+  health_pulse explore_performance     ❌ Access Denied
+  health_pulse schedule_failures       ❌ Access Denied
+  health_pulse legacy_features         ⚠️ &quot;Unsupported in Looker (Google Cloud core)&quot;
+  health_vacuum models / explores      ❌ Access Denied / null
+
+Why (the actual diagnosis)
+
+All the health tools work by querying Looker&#39;s System Activity model (the history,
+dashboard and query explores). Running those requires the see_system_activity
+permission on the role attached to the API3 credentials this MCP server
+authenticates with. The uniform Access Denied on /queries/run is the textbook
+signature of that permission being absent. legacy_features returning &quot;Unsupported&quot;
+is normal — it&#39;s a Looker-Core-only check and this is a Core instance.
+
+The fix (one-time, in Looker admin)
+
+Admin → Roles, edit the role bound to your API3 client ID, add see_system_activity.
+Re-run and all the health checks light up.
+
+Meanwhile — a metadata-based audit does work
+
+get_dashboards / run_dashboard don&#39;t touch System Activity, so here&#39;s a cleanup pass
+from what we already gathered:
+
+  ID     Title                          Flag
+  ────   ────────────────────────────   ─────────────────────────────────────
+  5, 6   &quot;test&quot; (×2, duplicate name)    Scratch — almost certainly deletable
+  8      TestJC                         Scratch
+  10     TestOrdersByCity               Scratch
+  11     My Dashboard                   Default/placeholder name
+  12     test-orders                    Scratch
+  14     💎 VIP Customer Intelligence   Superseded by v2 (#17) — 7 broken tiles
+
+~7 dashboards worth reviewing for deletion.</code></pre>
+<p>Note what Codex did <em>not</em> do here: it identified six deletion
+candidates and stopped. Deleting dashboards is a mutation, and the
+approval mode plus the <code>AGENTS.md</code> rule (“confirm before
+creating/altering/deleting Looker content”) both point the same
+direction. The agent proposes; you dispose.</p>
+<h4 id="show-me-the-money">Show me the Money!</h4>
+<p>The key value shows up when you push the combination of Codex, the
+model, and the Looker tools over MCP:</p>
+<pre class="plaintext"><code>&gt; &quot;Are we at risk of losing our best customers?&quot;
+
+I&#39;ll investigate using your Looker instance. Starting with what data is available,
+then digging into retention signals.
+
+• looker-managed › get_models
+
+This is the thelook e-commerce dataset. Exploring the richest model.
+
+• looker-managed › (3 calls)
+
+Rich model — there&#39;s a lifetime revenue-rank on each user, so I can define &quot;best
+customers&quot; precisely (Top Revenue Group / Top 1000) and track activity over time.
+First, the data&#39;s date range, so I know what &quot;recent&quot; means.
+
+• looker-managed › query
+
+Data runs right up to today. Now the core analysis: the Top Revenue Group&#39;s monthly
+spend and active-customer count over the last ~2 years.
+
+• looker-managed › query
+
+The business is growing overall, so a raw trend hides churn. The real risk signal is
+recency — how many of our best customers have gone quiet.
+
+• looker-managed › (4 calls)
+
+Here&#39;s what the data says. I defined &quot;best customers&quot; as your Top Revenue Group —
+the top 1,000 by lifetime valid revenue ($731K lifetime, ~$731 each). Then I looked
+at whether they&#39;re still actually buying.
+
+Short answer: the cohort&#39;s revenue is healthy, but there&#39;s a large dormant tail.
+
+Aggregate spend from top customers is at record highs — valid revenue rose from
+~$12–17K/month in late 2024 to $43K most recently, growing alongside the overall
+business. The franchise isn&#39;t collapsing.
+
+But recency tells a more worrying story. Of the 1,000 all-time best customers:
+
+  Last purchased within   # still active   Share   → Gone silent
+  ─────────────────────   ──────────────   ─────   ───────────────────────────
+  90 days                            258     26%   74% (742) inactive 3+ months
+  180 days                           419     42%   58% (581) inactive 6+ months
+  365 days                           585     59%   42% (415) inactive 12+ months
+
+So ~415 of your top-1,000 (42%) haven&#39;t placed a valid order in over a year —
+effectively lapsed. At the cohort&#39;s average lifetime value (~$731), that&#39;s on the
+order of ~$300K of historical revenue that has stopped repeating, plus another ~160
+in the 6–12 month &quot;cooling off&quot; zone.
+
+How to read this
+
+- It&#39;s a tail problem, not a top-line collapse. A concentrated set of top customers
+  is very active, while a long tail of former big spenders has quietly aged out.
+  That&#39;s partly natural — &quot;best customers&quot; is a lifetime label.
+- The actionable risk is the 6–12 month cooling band (~160 customers) — recently
+  valuable, now slipping, still winnable.
+
+Suggested next steps (I can do any of these — just say the word)
+
+1. Pull the actual at-risk list — name, email, lifetime spend, days-since-last-order.
+2. Build a &quot;Best Customer Retention&quot; dashboard so this is monitored ongoing.
+3. Add a churn-risk segment to the LookML model so &quot;at-risk best customers&quot; becomes
+   a reusable, governed field.
+
+Note that #2 and #3 create or modify content in your live Looker instance — those
+will come through as approval prompts, and I&#39;ll confirm specifics before running them.</code></pre>
+<p>Pull at-risk customers in real time, based on your actual data:</p>
+<pre class="plaintext"><code>Your best customers who&#39;ve gone quiet
+
+The 5 highest-lifetime-value members of the Top-1,000 revenue group with no valid
+order in 90+ days, ranked by lifetime spend. &quot;Cooling&quot; = last bought 3–6 months ago
+(most winnable); &quot;Dormant&quot; = 6+ months silent.
+
+  #  Customer          Country    Channel    Lifetime $  Orders  Status
+  ─  ───────────────   ────────   ────────   ──────────  ──────  ──────────
+  1  Craig Dickerson   France     Email          $1,849       8  🟡 Cooling
+  2  Mark Nolan        USA        Organic        $1,826       7  🟡 Cooling
+  3  John Hill         Brazil     Search         $1,554       4  🔴 Dormant
+  4  Glenn Foster      USA        Facebook       $1,455       8  🟡 Cooling
+  5  Thomas Davis      Australia  Search         $1,435       8  🔴 Dormant
+
+Notable: your single highest-lifetime-value customer overall (Craig Dickerson,
+$1,849) is on this list — cooling, not yet lost.
+
+The full at-risk population (all 1,000 top customers)
+
+- 🟢 258 active (bought in last 90 days) — healthy
+- 🟡 161 cooling — last order 3–6 months ago  ← highest-priority win-back
+- 🟠 166 slipping — last order 6–12 months ago
+- 🔴 415 lapsed — no order in 12+ months
+
+So 742 of your top 1,000 (74%) haven&#39;t purchased in 90+ days.
+
+Method note: ranked by lifetime valid spend; &quot;at-risk&quot; = no valid order in 90 days,
+cross-checked against the 90- and 180-day active sets. Status is bucketed by
+90/180-day windows rather than exact per-customer last-order dates — the MCP server
+couldn&#39;t compute that inline.</code></pre>
+<p>What-if scenarios:</p>
+<pre class="plaintext"><code>&gt; &quot;What if we raised outerwear prices 10% — what happens to VIP revenue and would it
+   dent volume?&quot;
+
+A pricing what-if on the VIP segment. Grounding it in actual numbers first.
+
+• looker-managed › (2 calls)
+
+Outerwear is the key finding: it&#39;s your VIPs&#39; #1 category by a wide margin — $245K
+(34% of all VIP lifetime revenue), 664 items at $370/item. This decision hits VIPs
+where they&#39;re most concentrated. Pulling cost too, for profit impact.
+
+Baseline — VIP outerwear today
+
+  Metric             Value
+  ────────────────   ───────────────────────
+  Revenue            $245,412
+  Units sold         664
+  Avg price / unit   $369.60
+  Cost / unit        $163.48
+  Gross profit       $136,859 (55.8% margin)
+  Profit / unit      $206.11
+
+What a +10% price does
+
+New price = $406.56 (+$36.96/unit; cost unchanged, so every extra dollar is margin).
+
+  Volume response      Units (Δ)     Revenue   vs today   Gross profit   vs today
+  ──────────────────   ──────────   ────────   ────────   ────────────   ────────
+  No dip (inelastic)   664  (0%)    $269,956   +$24,544       $161,405   +$24,546
+  −5%                  631 (−33)    $256,458   +$11,046       $153,335   +$16,476
+  −10%                 598 (−66)    $242,960    −$2,452       $145,266    +$8,407
+  −15%                 564 (−100)   $229,462   −$15,950       $137,197      ~flat
+  −20%                 531 (−133)   $215,964   −$29,449       $129,127    −$7,732
+
+The two numbers that matter
+
+- Revenue break-even: ~9% volume loss. You can lose up to ~60 of the 664 units
+  before the hike stops adding revenue.
+- Profit break-even: ~15% volume loss. Because you keep the full $37 markup at zero
+  added cost, profit holds even if revenue dips.
+
+Would it dent volume? Expect a modest dip. For your most loyal customers buying a
+premium considered-purchase category, elasticity is likely mild (roughly −0.3 to
+−0.8) — the top two rows: revenue +$11–20K, profit +$16–22K, only ~20–50 fewer units.
+
+One strategic caveat
+
+Tying back to the last analysis: 74% of your VIPs are already cooling or lapsed, and
+outerwear is their anchor category. A blanket 10% hike risks nudging cooling VIPs out
+the door, and that churned lifetime value would swamp the ~$15–20K modeled gain.
+- Raise on healthy/active VIPs; protect the at-risk ones.
+- Apply to new-season inventory rather than a visible retroactive hike.
+- Run it as a holdout test on a VIP subset first to get real elasticity.
+
+Caveat on the model: elasticity is assumed, not measured — no price-experiment
+history exists in this data.</code></pre>
+<h4 id="reading-the-lookml">Reading the LookML</h4>
+<p>Because <code>looker-dev</code> is loaded alongside
+<code>looker</code>, Codex can read the actual model source, not just
+the metadata — which is what makes “can I trust this measure?” an
+answerable question:</p>
+<pre class="plaintext"><code>&gt; &quot;What does filtered_average_vs_unfiltered_average actually compute, and can I
+   trust it?&quot;
+
+Let me read the LookML that defines it. First, locating the project files.
+
+• looker-managed › (2 calls)
+
+The measure lives in the user_summary_and_order_items_fields view. Reading it plus
+the two views it depends on.
+
+• looker-managed › (3 calls)
+
+I have the full definition and its dependencies. Verifying my reading against live
+data before giving a verdict — pulling the raw ingredients alongside the measure.
+
+• looker-managed › query
+
+The math reconciles exactly (Outerwear: 145.37 / 88.47 − 1 = 0.643 ✓). Full teardown:
+
+What it computes
+
+The percent difference between the average item price in the current query context
+and the same shoppers&#39; average item price over their entire lifetime. Positive =
+they&#39;re buying pricier-than-usual items in this slice.
+
+The actual SQL
+
+  measure: filtered_average_vs_unfiltered_average {
+    label: &quot;Avg Price vs These Users&#39; Avg Price (Lifetime)&quot;
+    type: number
+    sql: (${order_items.average_sale_price} * 1.0
+          / nullif(${user_summary_unfiltered.average_sale_price_for_these_users}, 0)) - 1 ;;
+    value_format_name: percent_0
+  }
+
+Where each half comes from — the clever part
+
+  Term          Field                                    Respects query filters?
+  ───────────   ──────────────────────────────────────   ─────────────────────────
+  Numerator     order_items.average_sale_price           Yes — rows in scope
+  Denominator   user_summary_unfiltered.average_sale_    No — lifetime avg for
+                price_for_these_users                    those same users
+
+The denominator&#39;s &quot;lifetime&quot; behavior comes from one line:
+
+  derived_table: {
+    explore_source: advanced_example_ecommerce { ... bind_all_filters: no }
+  }
+
+That derived table is one row per user, joined back to order_items by user_id.
+Because it&#39;s a 1-user-row joined to many order-item rows, Looker applies symmetric
+aggregates so summing lifetime sales/items counts each user exactly once (no
+fan-out). Its twin, user_summary_filtered, is identical but bind_all_filters: yes.
+
+Empirically verified:
+
+  Category            Filtered avg   Lifetime avg   Measure   Check
+  ─────────────────   ────────────   ────────────   ───────   ──────────────────────
+  Outerwear &amp; Coats        $145.37         $88.47      +64%   145.37/88.47−1 = 0.643 ✓
+  Suits                    $118.39         $77.38      +53%   ✓
+  Blazers &amp; Jackets         $92.51         $67.84      +36%   ✓
+
+Can you trust it? ✅ Yes — with three rules
+
+Correctly built: proper symmetric-aggregate handling, nullif(...,0) guards against
+divide-by-zero, both sides on the same &quot;Valid Orders only&quot; basis. No bug here.
+
+But it&#39;s a ratio-of-averages, so respect its nature:
+
+1. Don&#39;t sum, average, or trust a Totals row for it. Ratio measures don&#39;t roll up.
+2. The baseline is dynamic, not a global constant. Change a filter that changes which
+   users appear and the baseline moves. This is the #1 way people misread it.
+3. It&#39;s about per-item price mix, not spend or loyalty.
+
+Bottom line: trustworthy for exactly one question — &quot;in this slice, are these
+shoppers trading up or down on per-item price versus their own norm?&quot;</code></pre>
+<p>Note that this whole exchange used only read tools —
+<code>get_project_files</code>, <code>get_project_file</code>,
+<code>query</code> — so it ran without a single approval prompt. The
+mode is calibrated so that <em>understanding</em> your instance is
+frictionless and <em>changing</em> it is not.</p>
+<h4 id="executive-briefings">Executive briefings</h4>
+<pre class="plaintext"><code>The dashboard existed already (dashboard 14, built earlier from advanced_ecomm). To
+make it a proper briefing I added an executive layer on top of the existing charts:
+a 4-KPI summary strip, and a &quot;bottom line&quot; callout.
+
+The briefing in 30 seconds
+
+  Metric                  Value    Meaning
+  ─────────────────────   ──────   ─────────────────────────────────────
+  Lifetime revenue        $7.40M   All purchasing users
+  Top-1000 VIP revenue    $731K    $149 avg basket — ~7× the bottom tier
+  Revenue concentration   56%      From the 1st customer quartile
+  VIP geography           72%      Of VIP spend from China, US, Brasil
+
+Bottom line for the exec team: revenue is highly concentrated — a 1,000-customer VIP
+core spends ~7× the average shopper, is geographically narrow (three countries), and
+is premium-led (Outerwear &amp; Coats alone: $245K at a $370 avg item). The strategic
+lever is retaining and expanding the VIP core, not broad acquisition.
+
+One note on reading the charts: the Top 1000 tier is an elite flag inside the 1st
+quartile — its dollars are already counted there, so don&#39;t sum the tier bars.</code></pre>
+<p><img
+src="https://cdn-images-1.medium.com/max/1024/1*BooV1_XioZKS7gwvVLWvRA.png" /></p>
+<p><img
+src="https://cdn-images-1.medium.com/max/1024/1*VYd5q3ztXlKcw3mxJ6qaFg.png" /></p>
+<p>These are only high level examples of what can be done with the tech
+stack!</p>
+<h4 id="one-more-thing-the-looker-cli">One More Thing: the Looker
+CLI</h4>
+<p>The MCP path is not the only way in. The repo also ships a
+<code>Makefile</code> target that installs the <a
+href="https://github.com/looker-open-source/looker-cli">Looker CLI</a>
+into the project root, checksum-verified:</p>
+<pre class="shell"><code>make cli                              # latest release
+make cli LOOKER_CLI_VERSION=v0.4.8    # pinned
+make clean                            # remove the downloaded CLI, keep credentials</code></pre>
+<p>It reads the same <code>LOOKER_*</code> variables, so
+<code>source set_env.sh</code> covers both. Useful for the
+deterministic, scriptable half of the work — CI checks, bulk operations
+— while MCP covers the exploratory half. With the native server it earns
+its place twice over: <code>./lk token</code> is what mints the bearer
+token in the first place, and
+<code>./lk api project create_git_branch</code> covers the git tools the
+managed server does not expose.</p>
+<h4 id="troubleshooting">Troubleshooting</h4>
+<p>A short list of the things that actually go wrong:</p>
+<p><strong><code>/mcp</code> shows no servers</strong> - Cause: Project
+not trusted, so <code>.codex/config.toml</code> never loaded - Fix:
+Restart <code>codex</code> in the repo root and approve the trust
+prompt</p>
+<p><strong>Server fails immediately</strong> - Cause: No
+<code>.env</code> and no exported <code>LOOKER_*</code> - Fix:
+<code>source set_env.sh</code> — the launcher prints exactly this</p>
+<p><strong>Tools start failing with 401</strong> - Cause:
+<code>LOOKER_MCP_TOKEN</code> expired (Looker access tokens last one
+hour) - Fix: <code>export LOOKER_MCP_TOKEN=$(./lk token)</code> and
+restart Codex</p>
+<p><strong><code>run_dashboard</code> times out</strong> - Cause: Ten
+tiles = ten warehouse queries - Fix: Raise
+<code>tool_timeout_sec</code>, or run tiles individually</p>
+<p><strong>All <code>health_*</code> return Access Denied</strong> -
+Cause: API3 role lacks <code>see_system_activity</code> - Fix: Admin →
+Roles, add the permission</p>
+<p><strong>Filter returns nothing</strong> - Cause: Value was quoted -
+Fix: Pass values bare — <code>first_touch</code>, not
+<code>"first_touch"</code></p>
+<p><strong>Tools run without asking</strong> - Cause: Approval mode not
+applied - Fix: <code>codex mcp get looker-managed</code> — if the key
+isn’t echoed back it was misspelled and silently dropped. Also check you
+didn’t pick “don’t ask again” earlier in the session</p>
+<h4 id="summary">Summary</h4>
+<p>Codex was configured as a Looker MCP client against the
+<strong>Looker-managed MCP server</strong> — the native endpoint the
+instance hosts at <code>LOOKER_BASE_URL/mcp</code>, with no local binary
+in the stack. The <code>.codex/config.toml</code> registration points at
+a secret-free launcher script that resolves credentials from
+<code>.env</code> at runtime, and pins write-capable tools behind
+<code>default_tools_approval_mode = "writes"</code> so discovery and
+analysis run unattended while anything that mutates the live instance
+stops and asks. The MCP connection was then used to explore the
+instance, read and verify LookML, build Looks and dashboards, and run
+open-ended business analysis against the governed semantic model.</p>
+<p>The stack underneath is the same one the Claude Code version of this
+paper now uses — the same hosted endpoint, the same 40 tools, the same
+instance. What differs is only how each client presents a token: Claude
+Code runs a command per connection, Codex reads an environment variable
+at launch. That is the actual result worth noting: with the server
+hosted by Looker, a client integration is a URL and an auth convention,
+and the repository that used to carry a 292 MB binary now carries
+neither the binary nor the launcher that started it.</p>
+<p><em>A note on this revision: the setup and configuration sections
+describe the native MCP install, and the session transcripts have been
+updated to the <code>looker-managed</code> server name and its 40-tool
+inventory. The analysis, queries and results are unchanged from the
+original run.</em></p>
+</body>
+</html>
