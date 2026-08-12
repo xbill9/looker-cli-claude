@@ -650,25 +650,50 @@ before running, per default_tools_approval_mode = &quot;writes&quot; in .codex/c
 Want me to run one of them (models, connections, or dashboards) to verify connectivity?</code></pre>
 <h4 id="what-the-native-server-does-not-do">What the native server does
 not do</h4>
-<p>Two capabilities from the local-binary era are absent from the
-managed tool set.</p>
-<p><strong>Git branch management.</strong>
-<code>list_git_branches</code>, <code>get_git_branch</code>,
-<code>create_git_branch</code>, <code>switch_git_branch</code> and
-<code>delete_git_branch</code> are not exposed. LookML file editing and
-<code>dev_mode</code> are — so you can work in dev mode, you just cannot
-open the branch over MCP. The Looker CLI covers it:</p>
+<p>The gaps in the managed tool set are not random. The server covers
+Looker as a <em>semantic model</em> and stops at the edge of Looker as
+an <em>administered system</em>.</p>
+<p><strong>Git, entirely.</strong> <code>list_git_branches</code>,
+<code>get_git_branch</code>, <code>create_git_branch</code>,
+<code>switch_git_branch</code> and <code>delete_git_branch</code> all
+shipped with the local binary. The managed server exposes none of them.
+LookML file editing and <code>dev_mode</code> are present, so the agent
+can write files — it just cannot get itself onto a branch to write them
+safely. The CLI covers that half:</p>
 <pre class="shell"><code>./lk api project create_git_branch --project_id my_project --name my_branch
 ./lk project checkout my_project my_branch
 ./lk project branch my_project</code></pre>
+<p><strong>Commit is missing from both, and that one is not an MCP
+limitation.</strong> The Looker API has no commit endpoint. Search the
+CLI’s entire surface for one and you get deploy verbs:</p>
+<pre class="shell"><code>./lk meta search commit</code></pre>
+<pre class="plaintext"><code>Found 7 matching commands:
+  looker-cli api project create_git_branch     - Checkout New Git Branch
+  looker-cli api project deploy_to_production  - Deploy To Production
+  looker-cli api project tag_ref               - Tag Ref
+  looker-cli api project update_git_branch     - Update Project Git Branch
+  ...</code></pre>
+<p>So the agent creates the branch, writes the files, validates them and
+runs the tests — and then stops. Committing the workspace is an IDE
+operation. The loop that looks like it should close (branch → edit →
+validate → commit → deploy) closes at every step except the second to
+last, and that step needs a browser.</p>
+<p>Plan around it instead of fighting it. The agent does the branch, the
+edits, the validation and the tests; a human commits in the Looker IDE;
+the terminal deploys:</p>
+<pre class="shell"><code>./lk project deploy my_project</code></pre>
+<p><code>deploy_to_production</code> never had an MCP equivalent either,
+so the deploy was always going to be a CLI call. The commit is the only
+step in the chain that neither interface can reach.</p>
 <p><strong><code>get_field_value_suggestions</code>.</strong> Ask for
 valid filter values and the model has to query the field’s suggest
 explore directly instead.</p>
+<p><strong>The entire administrative surface.</strong> Users, groups,
+roles, permissions, user attributes, schedules, alerts, connections,
+themes and sessions have no MCP tools and never did. Every one of them
+is a <code>./lk api</code> call.</p>
 <p>Everything else — discovery, querying, content creation, LookML
-files, validation, tests, health — is present. So a LookML change
-becomes: open the branch with the CLI, edit and validate over MCP,
-deploy with the CLI (<code>./lk project deploy</code>, which never had
-an MCP equivalent).</p>
+files, validation, tests, health — is present and works.</p>
 <h4 id="a-word-about-approvals">A Word About Approvals</h4>
 <p>This is where the Codex configuration earns its keep. Codex separates
 two things that other clients tend to conflate: the
@@ -1264,23 +1289,42 @@ src="https://cdn-images-1.medium.com/max/1024/1*BooV1_XioZKS7gwvVLWvRA.png" /></
 src="https://cdn-images-1.medium.com/max/1024/1*VYd5q3ztXlKcw3mxJ6qaFg.png" /></p>
 <p>These are only high level examples of what can be done with the tech
 stack!</p>
-<h4 id="one-more-thing-the-looker-cli">One More Thing: the Looker
+<h4 id="the-other-half-the-looker-cli">The Other Half: the Looker
 CLI</h4>
-<p>The MCP path is not the only way in. The repo also ships a
-<code>Makefile</code> target that installs the <a
+<p>MCP is not the only way in, and on this stack it was never meant to
+be. The repo ships a <code>Makefile</code> target that installs the <a
 href="https://github.com/looker-open-source/looker-cli">Looker CLI</a>
 into the project root, checksum-verified:</p>
 <pre class="shell"><code>make cli                              # latest release
 make cli LOOKER_CLI_VERSION=v0.4.8    # pinned
 make clean                            # remove the downloaded CLI, keep credentials</code></pre>
 <p>It reads the same <code>LOOKER_*</code> variables, so
-<code>source set_env.sh</code> covers both. Useful for the
-deterministic, scriptable half of the work — CI checks, bulk operations
-— while MCP covers the exploratory half. With the native server it earns
-its place twice over: <code>./lk token</code> is what mints the bearer
-token in the first place, and
-<code>./lk api project create_git_branch</code> covers the git tools the
-managed server does not expose.</p>
+<code>source set_env.sh</code> covers both. Same instance, same API3
+key, same REST API underneath. The two interfaces do not differ in what
+they can reach — they differ in what happens to the answer.</p>
+<p><strong>Native MCP (<code>looker-managed</code>)</strong> - Coverage:
+40 tools — query, content, LookML dev, health - Results land in the
+model’s context - Every row consumes context - Good at: discovery,
+judgement, structured content creation - Bad at: bulk output, anything
+admin-shaped</p>
+<p><strong>CLI (<code>./lk</code>)</strong> - Coverage: the whole API —
+git branches, users, roles, schedules, connections, deploys - Results
+land on disk - Free of context until you read the file - Good at: scale,
+files, determinism, repeatability - Bad at: deciding what to ask for</p>
+<p>The heuristic that falls out of that split: <strong>discover and
+decide over MCP, execute and persist with the CLI.</strong></p>
+<p>The agent is the right thing to ask <em>which explore has revenue by
+cohort, and what are the exact field names</em> — it reads the semantic
+model and answers in one pass, which is precisely the job a human spends
+twenty minutes on in the Explore UI. It is the wrong thing to route
+40,000 rows through. Once a query shape is settled, freeze it into a
+<code>query.json</code> and let the CLI re-run it forever with no agent
+in the loop and no tokens burned:</p>
+<pre class="shell"><code>./lk query runquery --file q.json --format csv --output results.csv</code></pre>
+<p>The two also meet at the credential. <code>./lk token</code> mints
+the bearer token the MCP server authenticates with, so the CLI is not a
+second path bolted on beside the MCP server — it is what gets the MCP
+server connected in the first place.</p>
 <h4 id="troubleshooting">Troubleshooting</h4>
 <p>A short list of the things that actually go wrong:</p>
 <p><strong><code>/mcp</code> shows no servers</strong> - Cause: Project
@@ -1320,17 +1364,20 @@ stops and asks. The MCP connection was then used to explore the
 instance, read and verify LookML, build Looks and dashboards, and run
 open-ended business analysis against the governed semantic model.</p>
 <p>The stack underneath is the same one the Claude Code version of this
-paper now uses — the same hosted endpoint, the same 40 tools, the same
+paper uses — the same hosted endpoint, the same 40 tools, the same
 instance. What differs is only how each client presents a token: Claude
 Code runs a command per connection, Codex reads an environment variable
-at launch. That is the actual result worth noting: with the server
-hosted by Looker, a client integration is a URL and an auth convention,
-and the repository that used to carry a 292 MB binary now carries
-neither the binary nor the launcher that started it.</p>
-<p><em>A note on this revision: the setup and configuration sections
-describe the native MCP install, and the session transcripts have been
-updated to the <code>looker-managed</code> server name and its 40-tool
-inventory. The analysis, queries and results are unchanged from the
-original run.</em></p>
+at launch. With the server hosted by Looker, a client integration is now
+a URL and an auth convention, and the repository that used to carry a
+292 MB binary carries neither the binary nor the launcher that started
+it.</p>
+<p>The more useful result is that the native server does not stand
+alone, and is not trying to. It covers the semantic model — discovery,
+querying, content, LookML, validation — and stops cleanly at the
+boundary where Looker becomes an administered system. The CLI starts
+exactly there. Branch with the CLI, edit and validate over MCP, commit
+in the IDE because nothing else can reach it, deploy with the CLI.
+Install only one of the two and you will find that seam inside a
+week.</p>
 </body>
 </html>
